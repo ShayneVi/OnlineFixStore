@@ -142,10 +142,16 @@
                             name: gameData.name || `Game ${appID}`,
                             header_image: gameData.header_image || '',
                             short_description: gameData.short_description || '',
+                            detailed_description: gameData.detailed_description || '',
+                            about_the_game: gameData.about_the_game || '',
                             screenshots: gameData.screenshots || [],
                             genres: gameData.genres || [],
+                            categories: gameData.categories || [],
+                            user_tags: gameData.user_tags || [],
                             developers: gameData.developers || [],
-                            publishers: gameData.publishers || []
+                            publishers: gameData.publishers || [],
+                            release_date: gameData.release_date || {},
+                            platforms: gameData.platforms || {}
                         });
                         
                         setGames(prevGames =>
@@ -161,8 +167,12 @@
                         name: `Game ${appID}`,
                         header_image: '',
                         short_description: 'Description not available',
+                        detailed_description: '',
+                        about_the_game: '',
                         screenshots: [],
-                        genres: []
+                        genres: [],
+                        categories: [],
+                        user_tags: []
                     });
                 } finally {
                     setSteamLoading(false);
@@ -176,6 +186,13 @@
 
             const handleDownload = (game) => {
                 window.open(game.downloadUrl, '_blank');
+            };
+
+            // Function to strip HTML tags and clean text
+            const stripHtml = (html) => {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                return tmp.textContent || tmp.innerText || '';
             };
 
             const filteredGames = games.filter(game => 
@@ -208,19 +225,25 @@
                             ← Back to Store
                         </button>
 
-                        <div className="max-w-4xl mx-auto">
+                        <div className="max-w-5xl mx-auto">
                             <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
                                 {steamData.header_image && (
-                                    <img src={steamData.header_image} alt={steamData.name} className="w-full h-64 object-cover" />
+                                    <img src={steamData.header_image} alt={steamData.name} className="w-full h-80 object-cover" />
                                 )}
 
                                 <div className="p-8">
-                                    <h1 className="text-4xl font-bold mb-2">{steamData.name}</h1>
+                                    <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
                                     <p className="text-sm text-gray-400 mb-6">App ID: {selectedGame.appID}</p>
 
+                                    {steamData.short_description && (
+                                        <div className="mb-6 p-4 bg-gray-700 rounded-lg">
+                                            <p className="text-gray-200 text-lg leading-relaxed">{steamData.short_description}</p>
+                                        </div>
+                                    )}
+
                                     {steamData.screenshots && steamData.screenshots.length > 0 && (
-                                        <div className="mb-6">
-                                            <h2 className="text-xl font-semibold mb-3">Screenshots</h2>
+                                        <div className="mb-8">
+                                            <h2 className="text-2xl font-semibold mb-4">Screenshots</h2>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                 {steamData.screenshots.slice(0, 6).map((ss, idx) => (
                                                     <img key={idx} src={ss.path_thumbnail} alt={`Screenshot ${idx + 1}`} className="rounded hover:opacity-80 transition cursor-pointer" />
@@ -229,37 +252,78 @@
                                         </div>
                                     )}
 
-                                    <div className="mb-6">
-                                        <h2 className="text-xl font-semibold mb-2">Description</h2>
-                                        <p className="text-gray-300 leading-relaxed">{steamData.short_description || 'No description available'}</p>
-                                    </div>
-
-                                    {steamData.genres && steamData.genres.length > 0 && (
-                                        <div className="mb-6">
-                                            <h2 className="text-xl font-semibold mb-2">Genres</h2>
-                                            <div className="flex flex-wrap gap-2">
-                                                {steamData.genres.map((genre, idx) => (
-                                                    <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm">{genre.description}</span>
+                                    {(steamData.about_the_game || steamData.detailed_description) && (
+                                        <div className="mb-8">
+                                            <h2 className="text-3xl font-bold mb-4 text-blue-400">ABOUT THIS GAME</h2>
+                                            <div className="text-gray-300 leading-relaxed space-y-4">
+                                                {stripHtml(steamData.about_the_game || steamData.detailed_description).split('\n\n').map((paragraph, idx) => (
+                                                    paragraph.trim() && <p key={idx}>{paragraph}</p>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {steamData.developers && steamData.developers.length > 0 && (
-                                        <div className="mb-6">
-                                            <h2 className="text-xl font-semibold mb-2">Developer</h2>
-                                            <p className="text-gray-300">{steamData.developers.join(', ')}</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                        {steamData.genres && steamData.genres.length > 0 && (
+                                            <div>
+                                                <h2 className="text-xl font-semibold mb-3">Genres</h2>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {steamData.genres.map((genre, idx) => (
+                                                        <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm">{genre.description}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {steamData.categories && steamData.categories.length > 0 && (
+                                            <div>
+                                                <h2 className="text-xl font-semibold mb-3">Features</h2>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {steamData.categories.slice(0, 6).map((category, idx) => (
+                                                        <span key={idx} className="px-3 py-1 bg-purple-600 rounded-full text-sm">{category.description}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {steamData.user_tags && steamData.user_tags.length > 0 && (
+                                        <div className="mb-8">
+                                            <h2 className="text-xl font-semibold mb-3">Popular User-Defined Tags</h2>
+                                            <div className="flex flex-wrap gap-2">
+                                                {steamData.user_tags.map((tag, idx) => (
+                                                    <span key={idx} className="px-3 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-sm">
+                                                        {tag.name}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
 
-                                    {steamData.publishers && steamData.publishers.length > 0 && (
-                                        <div className="mb-6">
-                                            <h2 className="text-xl font-semibold mb-2">Publisher</h2>
-                                            <p className="text-gray-300">{steamData.publishers.join(', ')}</p>
-                                        </div>
-                                    )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                        {steamData.developers && steamData.developers.length > 0 && (
+                                            <div>
+                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Developer</h2>
+                                                <p className="text-gray-200">{steamData.developers.join(', ')}</p>
+                                            </div>
+                                        )}
 
-                                    <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition">
+                                        {steamData.publishers && steamData.publishers.length > 0 && (
+                                            <div>
+                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Publisher</h2>
+                                                <p className="text-gray-200">{steamData.publishers.join(', ')}</p>
+                                            </div>
+                                        )}
+
+                                        {steamData.release_date && steamData.release_date.date && (
+                                            <div>
+                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Release Date</h2>
+                                                <p className="text-gray-200">{steamData.release_date.date}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
                                         <Download /> Download Fix
                                     </button>
                                 </div>

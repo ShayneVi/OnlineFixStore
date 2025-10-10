@@ -561,12 +561,12 @@
                                     )}
                                 </div>
 
-                                <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto" style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
+                                <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto custom-scrollbar" style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
                                     <details className="mb-6">
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition pr-6">
                                             Browse by Tags
                                         </summary>
-                                        <div className="mt-4 space-y-2 custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                                             {allTags.length === 0 ? (
                                                 <p className="text-gray-400 text-sm">Loading tags...</p>
                                             ) : (
@@ -588,10 +588,10 @@
                                     </details>
 
                                     <details className="mb-6">
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition pr-6">
                                             Browse by Genres
                                         </summary>
-                                        <div className="mt-4 space-y-2 custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                                             {allGenres.length === 0 ? (
                                                 <p className="text-gray-400 text-sm">Loading genres...</p>
                                             ) : (

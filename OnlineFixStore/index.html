@@ -1,4 +1,33 @@
-<!DOCTYPE html>
+{steamData.developers && steamData.developers.length > 0 && (
+                                                    <div>
+                                                        <h2 className={`text-lg font-semibold mb-2 ${currentTheme.textMuted}`}>Developer</h2>
+                                                        <p className={currentTheme.textSecondary}>{steamData.developers.join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {steamData.publishers && steamData.publishers.length > 0 && (
+                                                    <div>
+                                                        <h2 className={`text-lg font-semibold mb-2 ${currentTheme.textMuted}`}>Publisher</h2>
+                                                        <p className={currentTheme.textSecondary}>{steamData.publishers.join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {steamData.release_date && steamData.release_date.date && (
+                                                    <div>
+                                                        <h2 className={`text-lg font-semibold mb-2 ${currentTheme.textMuted}`}>Release Date</h2>
+                                                        <p className={currentTheme.textSecondary}>{steamData.release_date.date}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
+                                                <Download /> Download Fix
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,6 +52,21 @@
         details[open] summary::after {
             transform: rotate(-180deg);
         }
+        /* Custom scrollbar for tags/genres */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #374151;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +82,7 @@
         const Home = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
         const Store = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
         const Mail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>;
+        const Settings = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2 1.4-1.4m1.4 7.2h-6m6 0h6m-13.8 5.2-1.4 1.4m-1.4-7.2h6m-6 0H1m13.8-5.2 1.4 1.4"></path></svg>;
         const X = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
         const Play = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
 
@@ -57,6 +102,82 @@
             const [selectedGenre, setSelectedGenre] = useState(null);
             const [lightboxImage, setLightboxImage] = useState(null);
             const [videoPlaying, setVideoPlaying] = useState(false);
+            const [theme, setTheme] = useState('dark');
+
+            const themes = {
+                dark: {
+                    name: 'Dark (Default)',
+                    bg: 'bg-gray-900',
+                    cardBg: 'bg-gray-800',
+                    sidebarBg: 'bg-gray-800',
+                    text: 'text-white',
+                    textSecondary: 'text-gray-300',
+                    textMuted: 'text-gray-400',
+                    border: 'border-gray-700',
+                    accent: 'bg-blue-600',
+                    accentHover: 'hover:bg-blue-700',
+                    buttonBg: 'bg-gray-700',
+                    buttonHover: 'hover:bg-gray-600'
+                },
+                midnight: {
+                    name: 'Midnight Blue',
+                    bg: 'bg-slate-950',
+                    cardBg: 'bg-slate-900',
+                    sidebarBg: 'bg-slate-900',
+                    text: 'text-blue-50',
+                    textSecondary: 'text-blue-100',
+                    textMuted: 'text-slate-400',
+                    border: 'border-slate-700',
+                    accent: 'bg-blue-500',
+                    accentHover: 'hover:bg-blue-600',
+                    buttonBg: 'bg-slate-800',
+                    buttonHover: 'hover:bg-slate-700'
+                },
+                forest: {
+                    name: 'Forest Green',
+                    bg: 'bg-green-950',
+                    cardBg: 'bg-green-900',
+                    sidebarBg: 'bg-green-900',
+                    text: 'text-green-50',
+                    textSecondary: 'text-green-100',
+                    textMuted: 'text-green-400',
+                    border: 'border-green-700',
+                    accent: 'bg-green-600',
+                    accentHover: 'hover:bg-green-700',
+                    buttonBg: 'bg-green-800',
+                    buttonHover: 'hover:bg-green-700'
+                },
+                sunset: {
+                    name: 'Sunset Orange',
+                    bg: 'bg-orange-950',
+                    cardBg: 'bg-orange-900',
+                    sidebarBg: 'bg-orange-900',
+                    text: 'text-orange-50',
+                    textSecondary: 'text-orange-100',
+                    textMuted: 'text-orange-400',
+                    border: 'border-orange-700',
+                    accent: 'bg-orange-600',
+                    accentHover: 'hover:bg-orange-700',
+                    buttonBg: 'bg-orange-800',
+                    buttonHover: 'hover:bg-orange-700'
+                },
+                purple: {
+                    name: 'Purple Haze',
+                    bg: 'bg-purple-950',
+                    cardBg: 'bg-purple-900',
+                    sidebarBg: 'bg-purple-900',
+                    text: 'text-purple-50',
+                    textSecondary: 'text-purple-100',
+                    textMuted: 'text-purple-400',
+                    border: 'border-purple-700',
+                    accent: 'bg-purple-600',
+                    accentHover: 'hover:bg-purple-700',
+                    buttonBg: 'bg-purple-800',
+                    buttonHover: 'hover:bg-purple-700'
+                }
+            };
+
+            const currentTheme = themes[theme];
 
             const GITHUB_USERNAME = 'ShayneVi';
             const GITHUB_REPO = 'OnlineFix';
@@ -321,19 +442,19 @@
 
             if (loading) {
                 return (
-                    <div className="flex items-center justify-center h-screen bg-gray-900">
+                    <div className={`flex items-center justify-center h-screen ${currentTheme.bg}`}>
                         <div className="text-center">
                             <Loader />
-                            <p className="text-white text-lg mt-4">Loading games...</p>
+                            <p className={`${currentTheme.text} text-lg mt-4`}>Loading games...</p>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="flex min-h-screen bg-gray-900 text-white">
+                <div className={`flex min-h-screen ${currentTheme.bg} ${currentTheme.text}`}>
                     {/* Left Sidebar Menu - Fixed */}
-                    <div className="w-64 bg-gray-800 border-r border-gray-700 fixed h-full overflow-y-auto">
+                    <div className={`w-64 ${currentTheme.sidebarBg} border-r ${currentTheme.border} fixed h-full overflow-y-auto`}>
                         <div className="p-6">
                             <h1 className="text-2xl font-bold mb-8 text-blue-400">Online Fix Store</h1>
                             
@@ -341,7 +462,7 @@
                                 <button
                                     onClick={() => setCurrentView('home')}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'home' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                        currentView === 'home' ? `${currentTheme.accent} text-white` : `${currentTheme.textSecondary} ${currentTheme.buttonHover}`
                                     }`}
                                 >
                                     <Home /> Home
@@ -350,7 +471,7 @@
                                 <button
                                     onClick={() => { setCurrentView('store'); setSelectedGame(null); }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'store' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                        currentView === 'store' ? `${currentTheme.accent} text-white` : `${currentTheme.textSecondary} ${currentTheme.buttonHover}`
                                     }`}
                                 >
                                     <Store /> Store
@@ -359,10 +480,19 @@
                                 <button
                                     onClick={() => setCurrentView('contact')}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'contact' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                        currentView === 'contact' ? `${currentTheme.accent} text-white` : `${currentTheme.textSecondary} ${currentTheme.buttonHover}`
                                     }`}
                                 >
                                     <Mail /> Contact
+                                </button>
+                                
+                                <button
+                                    onClick={() => setCurrentView('settings')}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
+                                        currentView === 'settings' ? `${currentTheme.accent} text-white` : `${currentTheme.textSecondary} ${currentTheme.buttonHover}`
+                                    }`}
+                                >
+                                    <Settings /> Settings
                                 </button>
                             </nav>
                         </div>
@@ -373,9 +503,9 @@
                         {/* Home View */}
                         {currentView === 'home' && (
                             <div className="p-8 max-w-4xl mx-auto">
-                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                <div className={`${currentTheme.cardBg} rounded-lg p-8 shadow-xl`}>
                                     <h2 className="text-4xl font-bold mb-6">Welcome</h2>
-                                    <div className="text-gray-300 leading-relaxed">
+                                    <div className={`${currentTheme.textSecondary} leading-relaxed`}>
                                         {homeContent.split('\n').map((line, idx) => (
                                             <p key={idx} className={line.trim() === '' ? 'h-4' : 'mb-2'}>
                                                 {line}
@@ -386,46 +516,84 @@
                             </div>
                         )}
 
+                        {/* Settings View */}
+                        {currentView === 'settings' && (
+                            <div className="p-8 max-w-4xl mx-auto">
+                                <div className={`${currentTheme.cardBg} rounded-lg p-8 shadow-xl`}>
+                                    <h2 className="text-4xl font-bold mb-6">Settings</h2>
+                                    
+                                    <div className="mb-8">
+                                        <h3 className="text-2xl font-semibold mb-4">Theme</h3>
+                                        <p className={`${currentTheme.textMuted} mb-4`}>Choose your preferred color theme</p>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {Object.keys(themes).map((themeKey) => (
+                                                <button
+                                                    key={themeKey}
+                                                    onClick={() => setTheme(themeKey)}
+                                                    className={`p-6 rounded-lg border-2 transition ${
+                                                        theme === themeKey 
+                                                            ? `${themes[themeKey].accent} border-white text-white` 
+                                                            : `${themes[themeKey].cardBg} ${themes[themeKey].border} ${themes[themeKey].text} hover:border-white`
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-lg font-semibold">{themes[themeKey].name}</span>
+                                                        {theme === themeKey && <span className="text-2xl">✓</span>}
+                                                    </div>
+                                                    <div className="flex gap-2 mt-3">
+                                                        <div className={`w-8 h-8 rounded ${themes[themeKey].bg}`}></div>
+                                                        <div className={`w-8 h-8 rounded ${themes[themeKey].cardBg}`}></div>
+                                                        <div className={`w-8 h-8 rounded ${themes[themeKey].accent}`}></div>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Contact View */}
                         {currentView === 'contact' && (
                             <div className="p-8 max-w-4xl mx-auto">
-                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                <div className={`${currentTheme.cardBg} rounded-lg p-8 shadow-xl`}>
                                     <h2 className="text-4xl font-bold mb-6">Contact Us</h2>
-                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                    <div className={`${currentTheme.textSecondary} leading-relaxed space-y-4`}>
                                         <p>Get in touch with us for support, questions, or feedback.</p>
                                         <div className="space-y-4">
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
+                                            <div className={`flex items-start gap-3 p-3 ${currentTheme.buttonBg} rounded`}>
                                                 <Mail />
                                                 <div>
-                                                    <p className="font-semibold text-white">Email</p>
+                                                    <p className={`font-semibold ${currentTheme.text}`}>Email</p>
                                                     <a href="mailto:fixitf759@gmail.com" className="text-blue-400 hover:text-blue-300 break-all">
                                                         fixitf759@gmail.com
                                                     </a>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
+                                            <div className={`flex items-start gap-3 p-3 ${currentTheme.buttonBg} rounded`}>
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="mt-1">
                                                     <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
                                                 </svg>
                                                 <div>
-                                                    <p className="font-semibold text-white">Discord</p>
+                                                    <p className={`font-semibold ${currentTheme.text}`}>Discord</p>
                                                     <p className="text-blue-400">lindong6631</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
+                                            <div className={`flex items-start gap-3 p-3 ${currentTheme.buttonBg} rounded`}>
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-1">
                                                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
                                                 </svg>
                                                 <div>
-                                                    <p className="font-semibold text-white">GitHub Issues</p>
+                                                    <p className={`font-semibold ${currentTheme.text}`}>GitHub Issues</p>
                                                     <a href="https://github.com/ShayneVi/OnlineFixStore/issues" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 break-all">
                                                         Report an Issue
                                                     </a>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-                                            <p className="text-sm text-gray-300">
+                                        <div className={`mt-6 p-4 ${currentTheme.buttonBg} rounded-lg`}>
+                                            <p className={`text-sm ${currentTheme.textSecondary}`}>
                                                 For game fix requests, issues with downloads, or general questions, please use the GitHub Issues page or send an email.
                                             </p>
                                         </div>
@@ -452,22 +620,22 @@
 
                                     {(selectedTag || selectedGenre) && (
                                         <div className="mb-4 flex flex-wrap items-center gap-2">
-                                            <span className="text-gray-400">Filtering by:</span>
+                                            <span className={currentTheme.textMuted}>Filtering by:</span>
                                             {selectedTag && (
-                                                <div className="flex items-center gap-2 px-3 py-1 bg-cyan-600 rounded-full text-sm">
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-cyan-600 rounded-full text-sm text-white">
                                                     <span>{selectedTag}</span>
                                                     <button onClick={() => setSelectedTag(null)} className="hover:text-gray-200">×</button>
                                                 </div>
                                             )}
                                             {selectedGenre && (
-                                                <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-full text-sm">
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-full text-sm text-white">
                                                     <span>{selectedGenre}</span>
                                                     <button onClick={() => setSelectedGenre(null)} className="hover:text-gray-200">×</button>
                                                 </div>
                                             )}
                                             <button 
                                                 onClick={() => { setSelectedTag(null); setSelectedGenre(null); }} 
-                                                className="text-gray-400 hover:text-white text-sm underline"
+                                                className={`${currentTheme.textMuted} hover:text-white text-sm underline`}
                                             >
                                                 Clear all
                                             </button>
@@ -476,13 +644,13 @@
 
                                     {filteredGames.length === 0 ? (
                                         <div className="text-center py-12">
-                                            <p className="text-gray-400 text-lg">No games found</p>
+                                            <p className={`${currentTheme.textMuted} text-lg`}>No games found</p>
                                         </div>
                                     ) : (
                                         <>
                                             <div className="grid grid-cols-6 gap-3 mb-8">
                                                 {currentGames.map(game => (
-                                                    <div key={game.id} onClick={() => handleGameClick(game)} className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg">
+                                                    <div key={game.id} onClick={() => handleGameClick(game)} className={`${currentTheme.cardBg} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg`}>
                                                         <div className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
                                                             {game.headerImage ? (
                                                                 <img 
@@ -491,14 +659,14 @@
                                                                     className="absolute inset-0 w-full h-full object-cover"
                                                                 />
                                                             ) : (
-                                                                <span className="text-center font-semibold text-xs leading-tight z-10 p-2">{game.name}</span>
+                                                                <span className="text-center font-semibold text-xs leading-tight z-10 p-2 text-white">{game.name}</span>
                                                             )}
                                                         </div>
                                                         <div className="p-2">
-                                                            <p className="text-xs text-white font-semibold truncate" title={game.name}>
+                                                            <p className={`text-xs ${currentTheme.text} font-semibold truncate`} title={game.name}>
                                                                 {!game.name.startsWith('Game ') ? game.name : ''}
                                                             </p>
-                                                            <p className="text-xs text-gray-400">ID: {game.appID}</p>
+                                                            <p className={`text-xs ${currentTheme.textMuted}`}>ID: {game.appID}</p>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -510,7 +678,7 @@
                                                     <button 
                                                         onClick={() => setCurrentPage(1)} 
                                                         disabled={currentPage === 1}
-                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
+                                                        className={`px-3 py-2 ${currentTheme.buttonBg} ${currentTheme.buttonHover} disabled:opacity-50 rounded transition text-sm`}
                                                     >
                                                         First
                                                     </button>
@@ -518,7 +686,7 @@
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
                                                         disabled={currentPage === 1}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
+                                                        className={`flex items-center gap-2 px-4 py-2 ${currentTheme.buttonBg} ${currentTheme.buttonHover} disabled:opacity-50 rounded transition`}
                                                     >
                                                         <ChevronLeft /> Previous
                                                     </button>
@@ -530,8 +698,8 @@
                                                                 onClick={() => setCurrentPage(pageNum)}
                                                                 className={`px-3 py-2 rounded transition ${
                                                                     currentPage === pageNum 
-                                                                        ? 'bg-blue-600 text-white' 
-                                                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                                        ? `${currentTheme.accent} text-white` 
+                                                                        : `${currentTheme.buttonBg} ${currentTheme.buttonHover} ${currentTheme.textSecondary}`
                                                                 }`}
                                                             >
                                                                 {pageNum}
@@ -542,7 +710,7 @@
                                                     <button 
                                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
                                                         disabled={currentPage === totalPages}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
+                                                        className={`flex items-center gap-2 px-4 py-2 ${currentTheme.buttonBg} ${currentTheme.buttonHover} disabled:opacity-50 rounded transition`}
                                                     >
                                                         Next <ChevronRight />
                                                     </button>
@@ -550,13 +718,13 @@
                                                     <button 
                                                         onClick={() => setCurrentPage(totalPages)} 
                                                         disabled={currentPage === totalPages}
-                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
+                                                        className={`px-3 py-2 ${currentTheme.buttonBg} ${currentTheme.buttonHover} disabled:opacity-50 rounded transition text-sm`}
                                                     >
                                                         Last
                                                     </button>
                                                 </div>
                                                 
-                                                <span className="text-gray-300 text-sm">
+                                                <span className={`${currentTheme.textSecondary} text-sm`}>
                                                     Page {currentPage} of {totalPages} ({filteredGames.length} games)
                                                 </span>
                                             </div>
@@ -565,15 +733,15 @@
                                 </div>
 
                                 {/* Right Sidebar - Tags & Genres */}
-                                <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto" style={{ maxHeight: '100vh' }}>
+                                <div className={`w-72 ${currentTheme.sidebarBg} border-l ${currentTheme.border} p-6 overflow-y-auto`} style={{ maxHeight: '100vh', paddingBottom: '100px' }}>
                                     {/* Browse by Tags */}
                                     <details className="mb-6" open>
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                        <summary className={`text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition ${currentTheme.text}`}>
                                             Browse by Tags
                                         </summary>
-                                        <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                                             {allTags.length === 0 ? (
-                                                <p className="text-gray-400 text-sm">Loading tags...</p>
+                                                <p className={`${currentTheme.textMuted} text-sm`}>Loading tags...</p>
                                             ) : (
                                                 allTags.map((tag, idx) => (
                                                     <button
@@ -582,7 +750,7 @@
                                                         className={`w-full text-left px-3 py-2 rounded transition text-sm ${
                                                             selectedTag === tag.name 
                                                                 ? 'bg-cyan-600 text-white' 
-                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                                : `${currentTheme.buttonBg} ${currentTheme.buttonHover} ${currentTheme.textSecondary}`
                                                         }`}
                                                     >
                                                         {tag.name}
@@ -594,12 +762,12 @@
 
                                     {/* Browse by Genres */}
                                     <details className="mb-6">
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                        <summary className={`text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition ${currentTheme.text}`}>
                                             Browse by Genres
                                         </summary>
-                                        <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                                             {allGenres.length === 0 ? (
-                                                <p className="text-gray-400 text-sm">Loading genres...</p>
+                                                <p className={`${currentTheme.textMuted} text-sm`}>Loading genres...</p>
                                             ) : (
                                                 allGenres.map((genre, idx) => (
                                                     <button
@@ -608,7 +776,7 @@
                                                         className={`w-full text-left px-3 py-2 rounded transition text-sm ${
                                                             selectedGenre === genre.description 
                                                                 ? 'bg-blue-600 text-white' 
-                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                                : `${currentTheme.buttonBg} ${currentTheme.buttonHover} ${currentTheme.textSecondary}`
                                                         }`}
                                                     >
                                                         {genre.description}
@@ -625,17 +793,17 @@
                         {currentView === 'game' && selectedGame && steamData && (
                             <div className="p-6">
                                 {/* Sticky Back Button */}
-                                <div className="sticky top-0 bg-gray-900 z-10 pb-4 mb-4">
+                                <div className={`sticky top-0 ${currentTheme.bg} z-10 pb-4 mb-4`}>
                                     <button 
                                         onClick={() => { setSelectedGame(null); setCurrentView('store'); }} 
-                                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition"
+                                        className={`px-4 py-2 ${currentTheme.buttonBg} ${currentTheme.buttonHover} rounded transition`}
                                     >
                                         ← Back to Store
                                     </button>
                                 </div>
 
                                 <div className="max-w-5xl mx-auto">
-                                    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                                    <div className={`${currentTheme.cardBg} rounded-lg overflow-hidden shadow-xl`}>
                                         {/* Video or Header Image */}
                                         {steamData.movies && steamData.movies.length > 0 && !videoPlaying ? (
                                             <div className="relative w-full h-80 bg-black">
@@ -668,11 +836,11 @@
 
                                         <div className="p-8">
                                             <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
-                                            <p className="text-sm text-gray-400 mb-6">App ID: {selectedGame.appID}</p>
+                                            <p className={`text-sm ${currentTheme.textMuted} mb-6`}>App ID: {selectedGame.appID}</p>
 
                                             {steamData.short_description && (
-                                                <div className="mb-6 p-4 bg-gray-700 rounded-lg">
-                                                    <p className="text-gray-200 text-lg leading-relaxed">{steamData.short_description}</p>
+                                                <div className={`mb-6 p-4 ${currentTheme.buttonBg} rounded-lg`}>
+                                                    <p className={`${currentTheme.textSecondary} text-lg leading-relaxed`}>{steamData.short_description}</p>
                                                 </div>
                                             )}
 
@@ -696,7 +864,7 @@
                                             {(steamData.about_the_game || steamData.detailed_description) && (
                                                 <div className="mb-8">
                                                     <h2 className="text-3xl font-bold mb-4 text-blue-400">ABOUT THIS GAME</h2>
-                                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                                    <div className={`${currentTheme.textSecondary} leading-relaxed space-y-4`}>
                                                         {stripHtml(steamData.about_the_game || steamData.detailed_description).split('\n\n').map((paragraph, idx) => (
                                                             paragraph.trim() && <p key={idx}>{paragraph}</p>
                                                         ))}
@@ -780,7 +948,7 @@
                                 onClick={() => setLightboxImage(null)}
                             >
                                 <button 
-                                    className="absolute top-4 right-4 text-white hover:text-gray-300"
+                                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition"
                                     onClick={() => setLightboxImage(null)}
                                 >
                                     <X />
@@ -788,7 +956,7 @@
                                 <img 
                                     src={lightboxImage} 
                                     alt="Full size screenshot" 
-                                    className="max-w-full max-h-full object-contain"
+                                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </div>

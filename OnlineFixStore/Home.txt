@@ -31,7 +31,7 @@ a great addition to anyone and goes well with this store.
 https://discord.gg/uDphxkJV6V
 
 ---INFO---
-Right now there is 400+ games. I am adding more every week, until
+Right now there is 500+ games. I am adding more every week, until
 all the games in online-fix.me are there.
 There may be some exceptions as I upload these fixes to my github and
 the maximum a file can be on free plan is 25mb. So there is already
@@ -50,5 +50,6 @@ work anymore, please do contact me. It could be because the game
 was updated and the fix either doesn't work anymore, which I will
 remove from the list of games, or that the fix was also updated -
 which I will update as soon as I can.
+
 
 For contacting, visit the contact section on the left.

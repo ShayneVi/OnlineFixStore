@@ -19,6 +19,11 @@
         const ChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>;
         const Download = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
         const Loader = () => <svg className="animate-spin" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>;
+        const Home = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+        const Store = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
+        const Mail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>;
+        const X = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+        const Play = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
 
         const GameFixStore = () => {
             const [games, setGames] = useState([]);
@@ -28,6 +33,12 @@
             const [loading, setLoading] = useState(true);
             const [steamLoading, setSteamLoading] = useState(false);
             const [searchQuery, setSearchQuery] = useState('');
+            const [currentView, setCurrentView] = useState('store');
+            const [homeContent, setHomeContent] = useState('');
+            const [selectedTag, setSelectedTag] = useState(null);
+            const [allTags, setAllTags] = useState([]);
+            const [lightboxImage, setLightboxImage] = useState(null);
+            const [videoPlaying, setVideoPlaying] = useState(false);
 
             const GITHUB_USERNAME = 'ShayneVi';
             const GITHUB_REPO = 'OnlineFix';
@@ -35,7 +46,6 @@
 
             const gameAppIDs = ['1001270','1020790','1025600','1030300','1060230','1062810','1063030','1063590','1079260','1097840','1107320','1116170','1116540','1124180','1125240','1129580','1133500','1139980','1154030','1158160','1171690','1183530','1190970','1203190','1203620','1214650','1216320','1240590','1245250','1252680','1266470','1266540','1268590','1284130','1284190','1326470','1328990','1331510','1335830','1340990','1342490','1351000','1354260','1363360','1371690','1374490','1390190','1403650','1407180','1411020','1424860','1426450','1439750','1445790','1465070','1479730','1481170','1484180','1485590','1498130','1501690','1511630','1527950','1534840','1538550','1540210','1550180','1555150','1564600','1566690','1575940','1584690','1592290','1595710','1601330','1603180','1604030','1605250','1619310','1621690','1623730','1624060','1636030','1638950','1641960','1656930','1660080','1661630','1669480','1672500','1677110','1677970','1682050','1683150','1686940','1689500','1689620','1691320','1708850','1714900','1721110','1722840','1722870','1723780','1724030','1726130','1729140','1745680','1757300','1761620','1763250','1765300','1771180','1790600','1791910','1794830','1796470','1801110','1801520','1812450','1812560','1817800','1830630','1836730','1839950','1843310','1855580','1861630','1866320','1866980','1877020','1888160','1892140','1893810','1903560','1911610','1931180','1947070','1951780','1953230','1955340','1959140','1975580','1981820','1982340','2000890','2001120','2009350','2009460','2012320','2015270','2021880','2059530','2061620','2076010','2088650','2089250','2095950','2106670','2115390','2116120','212480','2132850','2153780','2157560','2168260','2168680','217200','2174420','2178070','2186680','2186700','2189670','2192900','2193540','2195410','2202120','2204350','2208570','2215430','2217000','2235150','2235200','2248760','2262080','2263920','2268560','2269950','2271930','2272540','2273980','2275020','2280','2283880','2287330','2296990','2300320','2307350','2313330','232090','2328310','2336220','2343920','2347080','2351560','2354000','2354330','2355860','2357000','2367480','2370170','2374030','2379810','2390260','2392280','2400430','2406770','2408820','2423300','2427700','2428810','2436940','2437670','2440380','2444750','2450450','2454890','2455340','2456420','2457540','2467810','2469200','2475010','2475460','2492040','2506480','2510960','2512930','2518430','2533020','2537590','2543180','2543510','2545360','2545710','2566340','2567870','2570210','2599370','2617700','2620240','2622380','2625420','2627570','2628230','2634890','2644470','2646460','2658510','2661300','2683150','2686580','2686630','2689120','2695940','269770','2698780','2703850','2707940','2708450','2719200','2722360','2723680','2725200','2729480','2730810','2732610','2737070','2748340','2749770','2757810','2768430','2774380','2777220','2780470','2780980','2787320','2788040','2790330','2793380','2800450','2802820','2810780','2818480','2820700','2823080','2824490','282800','2828860','2835530','2835570','2841770','2846060','2847850','2868070','2878420','2881650','2897700','2903710','2904000','2909110','2920510','2920570','2939830','2948640','2949320','2960770','2961880','2963880','2965660','2973830','2976900','2977620','2993780','2996040','2999030','2999090','3004100','3008130','3010460','3013550','3024040','3025290','3030360','3036880','3044440','3059070','3060170','3070520','3075800','3077020','3088440','3097560','3107800','3108510','3111080','3112260','3121110','3125250','3126150','3130340','3146520','3164500','3169520','3172770','3176060','3201910','3211680','3237570','3241660','3247750','3249560','3263320','3288270','3298460','3308210','3334280','3338950','3376250','3400930','3408110','3419130','3438990','3441460','3444080','3445340','3447690','3448750','3484300','348470','3498270','3527290','3533100','3569500','3570070','357190','35720','3575300','3576880','3585800','3588490','3602720','3621700','3645890','3702930','3716600','374320','3805420','3880420','427410','433300','433320','454650','457140','460340','512900','513710','516750','526870','570940','597170','619820','65800','688540','692850','70','718650','753640','780290','780310','781180','801630','804490','810040','838380','866570','871540','881020','887570','898800','908060','917950','927350','936720','946880','983870','9900'];
 
-            // Cache for Steam data
             const steamCache = {};
 
             useEffect(() => {
@@ -47,7 +57,8 @@
                         downloadUrl: `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${appID}.zip`,
                         name: `Game ${appID}`,
                         headerImage: '',
-                        loading: true
+                        loading: true,
+                        tags: []
                     }));
 
                     setGames(gameList);
@@ -55,9 +66,14 @@
                 };
 
                 loadGames();
+
+                // Load home content
+                fetch('/home.txt')
+                    .then(res => res.text())
+                    .then(text => setHomeContent(text))
+                    .catch(() => setHomeContent('Welcome to Game Fix Store!\n\nYour one-stop destination for game fixes and updates.'));
             }, []);
 
-            // Batch fetch function for better performance
             const fetchGameData = async (appID) => {
                 if (steamCache[appID]) {
                     return steamCache[appID];
@@ -70,9 +86,24 @@
                     if (data[appID] && data[appID].success) {
                         const gameInfo = {
                             name: data[appID].data.name || `Game ${appID}`,
-                            headerImage: data[appID].data.header_image || ''
+                            headerImage: data[appID].data.header_image || '',
+                            tags: data[appID].data.user_tags || []
                         };
                         steamCache[appID] = gameInfo;
+                        
+                        // Collect all tags
+                        if (gameInfo.tags.length > 0) {
+                            setAllTags(prev => {
+                                const newTags = [...prev];
+                                gameInfo.tags.forEach(tag => {
+                                    if (!newTags.find(t => t.name === tag.name)) {
+                                        newTags.push(tag);
+                                    }
+                                });
+                                return newTags.sort((a, b) => b.count - a.count);
+                            });
+                        }
+                        
                         return gameInfo;
                     }
                 } catch (error) {
@@ -82,20 +113,17 @@
                 return null;
             };
 
-            // Fetch names for current page with concurrent requests
             useEffect(() => {
                 const fetchPageNames = async () => {
                     const startIdx = (currentPage - 1) * GAMES_PER_PAGE;
                     const pageGames = filteredGames.slice(startIdx, startIdx + GAMES_PER_PAGE);
                     
-                    // Filter games that need fetching
                     const gamesToFetch = pageGames.filter(game => 
                         game.name.startsWith('Game ') && !steamCache[game.appID]
                     );
                     
                     if (gamesToFetch.length === 0) return;
                     
-                    // Fetch in batches of 10 concurrent requests
                     const batchSize = 10;
                     for (let i = 0; i < gamesToFetch.length; i += batchSize) {
                         const batch = gamesToFetch.slice(i, i + batchSize);
@@ -104,31 +132,29 @@
                             batch.map(game => fetchGameData(game.appID))
                         );
                         
-                        // Update games with fetched data
                         results.forEach((data, idx) => {
                             if (data) {
                                 const game = batch[idx];
                                 setGames(prevGames =>
                                     prevGames.map(g =>
                                         g.appID === game.appID 
-                                            ? { ...g, name: data.name, headerImage: data.headerImage }
+                                            ? { ...g, name: data.name, headerImage: data.headerImage, tags: data.tags }
                                             : g
                                     )
                                 );
                             }
                         });
                         
-                        // Small delay between batches to avoid overwhelming the API
                         if (i + batchSize < gamesToFetch.length) {
                             await new Promise(resolve => setTimeout(resolve, 200));
                         }
                     }
                 };
 
-                if (!loading && filteredGames.length > 0) {
+                if (!loading && filteredGames.length > 0 && currentView === 'store') {
                     fetchPageNames();
                 }
-            }, [currentPage, filteredGames, loading]);
+            }, [currentPage, currentView, loading]);
 
             const fetchSteamData = async (appID) => {
                 try {
@@ -145,6 +171,7 @@
                             detailed_description: gameData.detailed_description || '',
                             about_the_game: gameData.about_the_game || '',
                             screenshots: gameData.screenshots || [],
+                            movies: gameData.movies || [],
                             genres: gameData.genres || [],
                             categories: gameData.categories || [],
                             user_tags: gameData.user_tags || [],
@@ -170,6 +197,7 @@
                         detailed_description: '',
                         about_the_game: '',
                         screenshots: [],
+                        movies: [],
                         genres: [],
                         categories: [],
                         user_tags: []
@@ -181,23 +209,26 @@
 
             const handleGameClick = (game) => {
                 setSelectedGame(game);
+                setCurrentView('game');
                 fetchSteamData(game.appID);
+                setVideoPlaying(false);
             };
 
             const handleDownload = (game) => {
                 window.open(game.downloadUrl, '_blank');
             };
 
-            // Function to strip HTML tags and clean text
             const stripHtml = (html) => {
                 const tmp = document.createElement('div');
                 tmp.innerHTML = html;
                 return tmp.textContent || tmp.innerText || '';
             };
 
-            const filteredGames = games.filter(game => 
-                game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+            const filteredGames = games.filter(game => {
+                const matchesSearch = game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesTag = !selectedTag || game.tags.some(tag => tag.name === selectedTag);
+                return matchesSearch && matchesTag;
+            });
 
             const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
             const startIdx = (currentPage - 1) * GAMES_PER_PAGE;
@@ -205,7 +236,24 @@
 
             useEffect(() => {
                 setCurrentPage(1);
-            }, [searchQuery]);
+            }, [searchQuery, selectedTag]);
+
+            // Generate page numbers
+            const getPageNumbers = () => {
+                const pages = [];
+                const maxVisible = 10;
+                let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                let end = Math.min(totalPages, start + maxVisible - 1);
+                
+                if (end - start < maxVisible - 1) {
+                    start = Math.max(1, end - maxVisible + 1);
+                }
+                
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+                return pages;
+            };
 
             if (loading) {
                 return (
@@ -218,179 +266,384 @@
                 );
             }
 
-            if (selectedGame && steamData) {
-                return (
-                    <div className="min-h-screen bg-gray-900 text-white p-6">
-                        <button onClick={() => setSelectedGame(null)} className="mb-6 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition">
-                            ← Back to Store
-                        </button>
-
-                        <div className="max-w-5xl mx-auto">
-                            <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-                                {steamData.header_image && (
-                                    <img src={steamData.header_image} alt={steamData.name} className="w-full h-80 object-cover" />
-                                )}
-
-                                <div className="p-8">
-                                    <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
-                                    <p className="text-sm text-gray-400 mb-6">App ID: {selectedGame.appID}</p>
-
-                                    {steamData.short_description && (
-                                        <div className="mb-6 p-4 bg-gray-700 rounded-lg">
-                                            <p className="text-gray-200 text-lg leading-relaxed">{steamData.short_description}</p>
-                                        </div>
-                                    )}
-
-                                    {steamData.screenshots && steamData.screenshots.length > 0 && (
-                                        <div className="mb-8">
-                                            <h2 className="text-2xl font-semibold mb-4">Screenshots</h2>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                {steamData.screenshots.slice(0, 6).map((ss, idx) => (
-                                                    <img key={idx} src={ss.path_thumbnail} alt={`Screenshot ${idx + 1}`} className="rounded hover:opacity-80 transition cursor-pointer" />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {(steamData.about_the_game || steamData.detailed_description) && (
-                                        <div className="mb-8">
-                                            <h2 className="text-3xl font-bold mb-4 text-blue-400">ABOUT THIS GAME</h2>
-                                            <div className="text-gray-300 leading-relaxed space-y-4">
-                                                {stripHtml(steamData.about_the_game || steamData.detailed_description).split('\n\n').map((paragraph, idx) => (
-                                                    paragraph.trim() && <p key={idx}>{paragraph}</p>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                        {steamData.genres && steamData.genres.length > 0 && (
-                                            <div>
-                                                <h2 className="text-xl font-semibold mb-3">Genres</h2>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {steamData.genres.map((genre, idx) => (
-                                                        <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm">{genre.description}</span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {steamData.categories && steamData.categories.length > 0 && (
-                                            <div>
-                                                <h2 className="text-xl font-semibold mb-3">Features</h2>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {steamData.categories.slice(0, 6).map((category, idx) => (
-                                                        <span key={idx} className="px-3 py-1 bg-purple-600 rounded-full text-sm">{category.description}</span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {steamData.user_tags && steamData.user_tags.length > 0 && (
-                                        <div className="mb-8">
-                                            <h2 className="text-xl font-semibold mb-3">Popular User-Defined Tags</h2>
-                                            <div className="flex flex-wrap gap-2">
-                                                {steamData.user_tags.map((tag, idx) => (
-                                                    <span key={idx} className="px-3 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-sm">
-                                                        {tag.name}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                        {steamData.developers && steamData.developers.length > 0 && (
-                                            <div>
-                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Developer</h2>
-                                                <p className="text-gray-200">{steamData.developers.join(', ')}</p>
-                                            </div>
-                                        )}
-
-                                        {steamData.publishers && steamData.publishers.length > 0 && (
-                                            <div>
-                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Publisher</h2>
-                                                <p className="text-gray-200">{steamData.publishers.join(', ')}</p>
-                                            </div>
-                                        )}
-
-                                        {steamData.release_date && steamData.release_date.date && (
-                                            <div>
-                                                <h2 className="text-lg font-semibold mb-2 text-gray-400">Release Date</h2>
-                                                <p className="text-gray-200">{steamData.release_date.date}</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
-                                        <Download /> Download Fix
-                                    </button>
-                                </div>
-                            </div>
+            return (
+                <div className="flex min-h-screen bg-gray-900 text-white">
+                    {/* Left Sidebar Menu - Fixed */}
+                    <div className="w-64 bg-gray-800 border-r border-gray-700 fixed h-full overflow-y-auto">
+                        <div className="p-6">
+                            <h1 className="text-2xl font-bold mb-8 text-blue-400">Game Fix Store</h1>
+                            
+                            <nav className="space-y-2">
+                                <button
+                                    onClick={() => setCurrentView('home')}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
+                                        currentView === 'home' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <Home /> Home
+                                </button>
+                                
+                                <button
+                                    onClick={() => { setCurrentView('store'); setSelectedGame(null); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
+                                        currentView === 'store' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <Store /> Store
+                                </button>
+                                
+                                <button
+                                    onClick={() => setCurrentView('contact')}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
+                                        currentView === 'contact' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <Mail /> Contact
+                                </button>
+                            </nav>
                         </div>
                     </div>
-                );
-            }
 
-            return (
-                <div className="min-h-screen bg-gray-900 text-white p-6">
-                    <div className="max-w-7xl mx-auto">
-                        <h1 className="text-4xl font-bold mb-6">Game Fix Store</h1>
-
-                        <div className="mb-8">
-                            <input
-                                type="text"
-                                placeholder="Search by App ID or game name..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-                            />
-                        </div>
-
-                        {filteredGames.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-gray-400 text-lg">No games found matching "{searchQuery}"</p>
+                    {/* Main Content */}
+                    <div className="flex-1 ml-64">
+                        {/* Home View */}
+                        {currentView === 'home' && (
+                            <div className="p-8 max-w-4xl mx-auto">
+                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                    <h2 className="text-4xl font-bold mb-6">Welcome</h2>
+                                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                        {homeContent}
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-6 gap-3 mb-8">
-                                    {currentGames.map(game => (
-                                        <div key={game.id} onClick={() => handleGameClick(game)} className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg">
-                                            <div className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
-                                                {game.headerImage ? (
-                                                    <img 
-                                                        src={game.headerImage} 
-                                                        alt={game.name}
-                                                        className="absolute inset-0 w-full h-full object-cover"
-                                                        style={{ objectFit: 'cover' }}
-                                                    />
-                                                ) : (
-                                                    <span className="text-center font-semibold text-xs leading-tight z-10 p-2">{game.name}</span>
+                        )}
+
+                        {/* Contact View */}
+                        {currentView === 'contact' && (
+                            <div className="p-8 max-w-4xl mx-auto">
+                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                    <h2 className="text-4xl font-bold mb-6">Contact Us</h2>
+                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                        <p>Get in touch with us for support, questions, or feedback.</p>
+                                        <div className="space-y-2">
+                                            <p><strong>Email:</strong> your-email@example.com</p>
+                                            <p><strong>Discord:</strong> YourDiscord#0000</p>
+                                            <p><strong>GitHub:</strong> github.com/{GITHUB_USERNAME}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Store View */}
+                        {currentView === 'store' && !selectedGame && (
+                            <div className="flex">
+                                <div className="flex-1 p-6">
+                                    <h1 className="text-4xl font-bold mb-6">Game Store</h1>
+
+                                    <div className="mb-8">
+                                        <input
+                                            type="text"
+                                            placeholder="Search by App ID or game name..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    {selectedTag && (
+                                        <div className="mb-4 flex items-center gap-2">
+                                            <span className="text-gray-400">Filtering by:</span>
+                                            <span className="px-3 py-1 bg-cyan-600 rounded-full text-sm">{selectedTag}</span>
+                                            <button onClick={() => setSelectedTag(null)} className="text-gray-400 hover:text-white">
+                                                Clear
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {filteredGames.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <p className="text-gray-400 text-lg">No games found</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="grid grid-cols-6 gap-3 mb-8">
+                                                {currentGames.map(game => (
+                                                    <div key={game.id} onClick={() => handleGameClick(game)} className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg">
+                                                        <div className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
+                                                            {game.headerImage ? (
+                                                                <img 
+                                                                    src={game.headerImage} 
+                                                                    alt={game.name}
+                                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-center font-semibold text-xs leading-tight z-10 p-2">{game.name}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-2">
+                                                            <p className="text-xs text-white font-semibold truncate" title={game.name}>
+                                                                {!game.name.startsWith('Game ') ? game.name : ''}
+                                                            </p>
+                                                            <p className="text-xs text-gray-400">ID: {game.appID}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Pagination */}
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => setCurrentPage(1)} 
+                                                        disabled={currentPage === 1}
+                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
+                                                    >
+                                                        First
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                                                        disabled={currentPage === 1}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
+                                                    >
+                                                        <ChevronLeft /> Previous
+                                                    </button>
+
+                                                    <div className="flex gap-1">
+                                                        {getPageNumbers().map(pageNum => (
+                                                            <button
+                                                                key={pageNum}
+                                                                onClick={() => setCurrentPage(pageNum)}
+                                                                className={`px-3 py-2 rounded transition ${
+                                                                    currentPage === pageNum 
+                                                                        ? 'bg-blue-600 text-white' 
+                                                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                                }`}
+                                                            >
+                                                                {pageNum}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    <button 
+                                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                                                        disabled={currentPage === totalPages}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
+                                                    >
+                                                        Next <ChevronRight />
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        onClick={() => setCurrentPage(totalPages)} 
+                                                        disabled={currentPage === totalPages}
+                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
+                                                    >
+                                                        Last
+                                                    </button>
+                                                </div>
+                                                
+                                                <span className="text-gray-300 text-sm">
+                                                    Page {currentPage} of {totalPages} ({filteredGames.length} games)
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Right Sidebar - Tags */}
+                                <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto" style={{ maxHeight: '100vh' }}>
+                                    <h3 className="text-xl font-bold mb-4">Browse by Tags</h3>
+                                    <div className="space-y-2">
+                                        {allTags.slice(0, 50).map((tag, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setSelectedTag(tag.name)}
+                                                className={`w-full text-left px-3 py-2 rounded transition ${
+                                                    selectedTag === tag.name 
+                                                        ? 'bg-cyan-600 text-white' 
+                                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                }`}
+                                            >
+                                                {tag.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Game Detail View */}
+                        {currentView === 'game' && selectedGame && steamData && (
+                            <div className="p-6">
+                                {/* Sticky Back Button */}
+                                <div className="sticky top-0 bg-gray-900 z-10 pb-4 mb-4">
+                                    <button 
+                                        onClick={() => { setSelectedGame(null); setCurrentView('store'); }} 
+                                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition"
+                                    >
+                                        ← Back to Store
+                                    </button>
+                                </div>
+
+                                <div className="max-w-5xl mx-auto">
+                                    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                                        {/* Video or Header Image */}
+                                        {steamData.movies && steamData.movies.length > 0 && !videoPlaying ? (
+                                            <div className="relative w-full h-80 bg-black">
+                                                <img 
+                                                    src={steamData.movies[0].thumbnail} 
+                                                    alt="Video thumbnail" 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button 
+                                                    onClick={() => setVideoPlaying(true)}
+                                                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 hover:bg-opacity-60 transition"
+                                                >
+                                                    <Play />
+                                                </button>
+                                            </div>
+                                        ) : steamData.movies && steamData.movies.length > 0 && videoPlaying ? (
+                                            <div className="relative w-full h-80 bg-black">
+                                                <video 
+                                                    controls 
+                                                    autoPlay 
+                                                    className="w-full h-full"
+                                                    src={steamData.movies[0].mp4?.max || steamData.movies[0].webm?.max}
+                                                >
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        ) : steamData.header_image ? (
+                                            <img src={steamData.header_image} alt={steamData.name} className="w-full h-80 object-cover" />
+                                        ) : null}
+
+                                        <div className="p-8">
+                                            <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
+                                            <p className="text-sm text-gray-400 mb-6">App ID: {selectedGame.appID}</p>
+
+                                            {steamData.short_description && (
+                                                <div className="mb-6 p-4 bg-gray-700 rounded-lg">
+                                                    <p className="text-gray-200 text-lg leading-relaxed">{steamData.short_description}</p>
+                                                </div>
+                                            )}
+
+                                            {steamData.screenshots && steamData.screenshots.length > 0 && (
+                                                <div className="mb-8">
+                                                    <h2 className="text-2xl font-semibold mb-4">Screenshots</h2>
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                        {steamData.screenshots.slice(0, 6).map((ss, idx) => (
+                                                            <img 
+                                                                key={idx} 
+                                                                src={ss.path_thumbnail} 
+                                                                alt={`Screenshot ${idx + 1}`} 
+                                                                className="rounded hover:opacity-80 transition cursor-pointer"
+                                                                onClick={() => setLightboxImage(ss.path_full)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {(steamData.about_the_game || steamData.detailed_description) && (
+                                                <div className="mb-8">
+                                                    <h2 className="text-3xl font-bold mb-4 text-blue-400">ABOUT THIS GAME</h2>
+                                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                                        {stripHtml(steamData.about_the_game || steamData.detailed_description).split('\n\n').map((paragraph, idx) => (
+                                                            paragraph.trim() && <p key={idx}>{paragraph}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                                {steamData.genres && steamData.genres.length > 0 && (
+                                                    <div>
+                                                        <h2 className="text-xl font-semibold mb-3">Genres</h2>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {steamData.genres.map((genre, idx) => (
+                                                                <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm">{genre.description}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {steamData.categories && steamData.categories.length > 0 && (
+                                                    <div>
+                                                        <h2 className="text-xl font-semibold mb-3">Features</h2>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {steamData.categories.slice(0, 6).map((category, idx) => (
+                                                                <span key={idx} className="px-3 py-1 bg-purple-600 rounded-full text-sm">{category.description}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
-                                            <div className="p-2">
-                                                <p className="text-xs text-white font-semibold truncate" title={game.name}>
-                                                    {!game.name.startsWith('Game ') ? game.name : ''}
-                                                </p>
-                                                <p className="text-xs text-gray-400">ID: {game.appID}</p>
+
+                                            {steamData.user_tags && steamData.user_tags.length > 0 && (
+                                                <div className="mb-8">
+                                                    <h2 className="text-xl font-semibold mb-3">Popular User-Defined Tags</h2>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {steamData.user_tags.map((tag, idx) => (
+                                                            <span key={idx} className="px-3 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-sm">
+                                                                {tag.name}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                                {steamData.developers && steamData.developers.length > 0 && (
+                                                    <div>
+                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Developer</h2>
+                                                        <p className="text-gray-200">{steamData.developers.join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {steamData.publishers && steamData.publishers.length > 0 && (
+                                                    <div>
+                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Publisher</h2>
+                                                        <p className="text-gray-200">{steamData.publishers.join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {steamData.release_date && steamData.release_date.date && (
+                                                    <div>
+                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Release Date</h2>
+                                                        <p className="text-gray-200">{steamData.release_date.date}</p>
+                                                    </div>
+                                                )}
                                             </div>
+
+                                            <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
+                                                <Download /> Download Fix
+                                            </button>
                                         </div>
-                                    ))}
+                                    </div>
                                 </div>
+                            </div>
+                        )}
 
-                                <div className="flex items-center justify-between">
-                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition">
-                                        <ChevronLeft /> Previous
-                                    </button>
-
-                                    <span className="text-gray-300">Page {currentPage} of {totalPages} ({filteredGames.length} games {searchQuery ? 'found' : 'total'})</span>
-
-                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition">
-                                        Next <ChevronRight />
-                                    </button>
-                                </div>
-                            </>
+                        {/* Image Lightbox */}
+                        {lightboxImage && (
+                            <div 
+                                className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+                                onClick={() => setLightboxImage(null)}
+                            >
+                                <button 
+                                    className="absolute top-4 right-4 text-white hover:text-gray-300"
+                                    onClick={() => setLightboxImage(null)}
+                                >
+                                    <X />
+                                </button>
+                                <img 
+                                    src={lightboxImage} 
+                                    alt="Full size screenshot" 
+                                    className="max-w-full max-h-full object-contain"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

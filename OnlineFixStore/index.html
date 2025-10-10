@@ -8,6 +8,22 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        details summary {
+            list-style: none;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary::after {
+            content: '▼';
+            float: right;
+            transition: transform 0.2s;
+        }
+        details[open] summary::after {
+            transform: rotate(-180deg);
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -37,6 +53,8 @@
             const [homeContent, setHomeContent] = useState('');
             const [selectedTag, setSelectedTag] = useState(null);
             const [allTags, setAllTags] = useState([]);
+            const [allGenres, setAllGenres] = useState([]);
+            const [selectedGenre, setSelectedGenre] = useState(null);
             const [lightboxImage, setLightboxImage] = useState(null);
             const [videoPlaying, setVideoPlaying] = useState(false);
 
@@ -116,7 +134,8 @@
                         const gameInfo = {
                             name: data[appID].data.name || `Game ${appID}`,
                             headerImage: data[appID].data.header_image || '',
-                            tags: data[appID].data.user_tags || []
+                            tags: data[appID].data.user_tags || [],
+                            genres: data[appID].data.genres || []
                         };
                         steamCache[appID] = gameInfo;
                         
@@ -129,7 +148,22 @@
                                         newTags.push(tag);
                                     }
                                 });
-                                return newTags.sort((a, b) => b.count - a.count);
+                                // Sort alphabetically by name
+                                return newTags.sort((a, b) => a.name.localeCompare(b.name));
+                            });
+                        }
+                        
+                        // Collect all genres
+                        if (gameInfo.genres.length > 0) {
+                            setAllGenres(prev => {
+                                const newGenres = [...prev];
+                                gameInfo.genres.forEach(genre => {
+                                    if (!newGenres.find(g => g.description === genre.description)) {
+                                        newGenres.push(genre);
+                                    }
+                                });
+                                // Sort alphabetically by description
+                                return newGenres.sort((a, b) => a.description.localeCompare(b.description));
                             });
                         }
                         
@@ -167,7 +201,7 @@
                                 setGames(prevGames =>
                                     prevGames.map(g =>
                                         g.appID === game.appID 
-                                            ? { ...g, name: data.name, headerImage: data.headerImage, tags: data.tags }
+                                            ? { ...g, name: data.name, headerImage: data.headerImage, tags: data.tags, genres: data.genres }
                                             : g
                                     )
                                 );
@@ -256,7 +290,8 @@
             const filteredGames = games.filter(game => {
                 const matchesSearch = game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesTag = !selectedTag || game.tags.some(tag => tag.name === selectedTag);
-                return matchesSearch && matchesTag;
+                const matchesGenre = !selectedGenre || game.genres.some(genre => genre.description === selectedGenre);
+                return matchesSearch && matchesTag && matchesGenre;
             });
 
             const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
@@ -265,7 +300,7 @@
 
             useEffect(() => {
                 setCurrentPage(1);
-            }, [searchQuery, selectedTag]);
+            }, [searchQuery, selectedTag, selectedGenre]);
 
             // Generate page numbers
             const getPageNumbers = () => {
@@ -415,12 +450,26 @@
                                         />
                                     </div>
 
-                                    {selectedTag && (
-                                        <div className="mb-4 flex items-center gap-2">
+                                    {(selectedTag || selectedGenre) && (
+                                        <div className="mb-4 flex flex-wrap items-center gap-2">
                                             <span className="text-gray-400">Filtering by:</span>
-                                            <span className="px-3 py-1 bg-cyan-600 rounded-full text-sm">{selectedTag}</span>
-                                            <button onClick={() => setSelectedTag(null)} className="text-gray-400 hover:text-white">
-                                                Clear
+                                            {selectedTag && (
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-cyan-600 rounded-full text-sm">
+                                                    <span>{selectedTag}</span>
+                                                    <button onClick={() => setSelectedTag(null)} className="hover:text-gray-200">×</button>
+                                                </div>
+                                            )}
+                                            {selectedGenre && (
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-full text-sm">
+                                                    <span>{selectedGenre}</span>
+                                                    <button onClick={() => setSelectedGenre(null)} className="hover:text-gray-200">×</button>
+                                                </div>
+                                            )}
+                                            <button 
+                                                onClick={() => { setSelectedTag(null); setSelectedGenre(null); }} 
+                                                className="text-gray-400 hover:text-white text-sm underline"
+                                            >
+                                                Clear all
                                             </button>
                                         </div>
                                     )}
@@ -515,24 +564,59 @@
                                     )}
                                 </div>
 
-                                {/* Right Sidebar - Tags */}
+                                {/* Right Sidebar - Tags & Genres */}
                                 <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto" style={{ maxHeight: '100vh' }}>
-                                    <h3 className="text-xl font-bold mb-4">Browse by Tags</h3>
-                                    <div className="space-y-2">
-                                        {allTags.slice(0, 50).map((tag, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => setSelectedTag(tag.name)}
-                                                className={`w-full text-left px-3 py-2 rounded transition ${
-                                                    selectedTag === tag.name 
-                                                        ? 'bg-cyan-600 text-white' 
-                                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                                }`}
-                                            >
-                                                {tag.name}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {/* Browse by Tags */}
+                                    <details className="mb-6" open>
+                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                            Browse by Tags
+                                        </summary>
+                                        <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                                            {allTags.length === 0 ? (
+                                                <p className="text-gray-400 text-sm">Loading tags...</p>
+                                            ) : (
+                                                allTags.map((tag, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => setSelectedTag(tag.name)}
+                                                        className={`w-full text-left px-3 py-2 rounded transition text-sm ${
+                                                            selectedTag === tag.name 
+                                                                ? 'bg-cyan-600 text-white' 
+                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                        }`}
+                                                    >
+                                                        {tag.name}
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </details>
+
+                                    {/* Browse by Genres */}
+                                    <details className="mb-6">
+                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition">
+                                            Browse by Genres
+                                        </summary>
+                                        <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                                            {allGenres.length === 0 ? (
+                                                <p className="text-gray-400 text-sm">Loading genres...</p>
+                                            ) : (
+                                                allGenres.map((genre, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => setSelectedGenre(genre.description)}
+                                                        className={`w-full text-left px-3 py-2 rounded transition text-sm ${
+                                                            selectedGenre === genre.description 
+                                                                ? 'bg-blue-600 text-white' 
+                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                        }`}
+                                                    >
+                                                        {genre.description}
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </details>
                                 </div>
                             </div>
                         )}

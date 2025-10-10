@@ -298,11 +298,9 @@
             };
 
             useEffect(() => {
-                const fetchPageNames = async () => {
-                    const startIdx = (currentPage - 1) * GAMES_PER_PAGE;
-                    const pageGames = filteredGames.slice(startIdx, startIdx + GAMES_PER_PAGE);
-                    
-                    const gamesToFetch = pageGames.filter(game => 
+                const fetchAllGames = async () => {
+                    // Fetch all games at once in batches
+                    const gamesToFetch = games.filter(game => 
                         game.name.startsWith('Game ') && !steamCache[game.appID]
                     );
                     
@@ -329,16 +327,17 @@
                             }
                         });
                         
+                        // Small delay between batches
                         if (i + batchSize < gamesToFetch.length) {
                             await new Promise(resolve => setTimeout(resolve, 200));
                         }
                     }
                 };
 
-                if (!loading && filteredGames.length > 0 && currentView === 'store') {
-                    fetchPageNames();
+                if (!loading && games.length > 0 && currentView === 'store') {
+                    fetchAllGames();
                 }
-            }, [currentPage, currentView, loading]);
+            }, [games.length, currentView, loading]);
 
             const fetchSteamData = async (appID) => {
                 try {
@@ -396,6 +395,8 @@
                 setCurrentView('game');
                 fetchSteamData(game.appID);
                 setVideoPlaying(false);
+                // Scroll to top when opening game details
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
             const handleDownload = (game) => {
@@ -410,8 +411,8 @@
 
             const filteredGames = games.filter(game => {
                 const matchesSearch = game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesTag = !selectedTag || game.tags.some(tag => tag.name === selectedTag);
-                const matchesGenre = !selectedGenre || game.genres.some(genre => genre.description === selectedGenre);
+                const matchesTag = !selectedTag || (game.tags && game.tags.some(tag => tag.name === selectedTag));
+                const matchesGenre = !selectedGenre || (game.genres && game.genres.some(genre => genre.description === selectedGenre));
                 return matchesSearch && matchesTag && matchesGenre;
             });
 
@@ -930,6 +931,16 @@
                                                         <p className="text-gray-200">{steamData.release_date.date}</p>
                                                     </div>
                                                 )}
+                                            </div>
+
+                                            <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
+                                                <Download /> Download Fix
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                                             </div>
 
                                             <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">

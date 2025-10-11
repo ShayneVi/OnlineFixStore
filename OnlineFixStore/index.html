@@ -9,42 +9,32 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        details summary {
-            list-style: none;
-        }
-        details summary::-webkit-details-marker {
-            display: none;
-        }
-        details summary::after {
-            content: '▼';
-            float: right;
-            transition: transform 0.2s;
-        }
-        details[open] summary::after {
-            transform: rotate(-180deg);
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #374151;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #6b7280;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
+        details summary { list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details summary::after { content: '▼'; float: right; transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(-180deg); }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #374151; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        
+        /* Light mode */
+        .light-mode { background-color: #f3f4f6; color: #111827; }
+        .light-mode .bg-gray-900 { background-color: #ffffff; }
+        .light-mode .bg-gray-800 { background-color: #f9fafb; }
+        .light-mode .bg-gray-700 { background-color: #e5e7eb; }
+        .light-mode .text-white { color: #111827; }
+        .light-mode .text-gray-300 { color: #6b7280; }
+        .light-mode .text-gray-400 { color: #9ca3af; }
+        .light-mode .border-gray-700 { border-color: #d1d5db; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // Icons
         const ChevronLeft = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>;
         const ChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>;
         const Download = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
@@ -54,6 +44,18 @@
         const Mail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>;
         const X = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
         const Play = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const Heart = ({ filled }) => filled ? 
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> : 
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
+        const Star = ({ filled }) => filled ? 
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> : 
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+        const Sun = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>;
+        const Moon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>;
+        const History = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+        const BarChart = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>;
+        const Book = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>;
+        const Bell = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>;
 
         const GameFixStore = () => {
             const [games, setGames] = useState([]);
@@ -71,28 +73,140 @@
             const [selectedGenre, setSelectedGenre] = useState(null);
             const [lightboxImage, setLightboxImage] = useState(null);
             const [videoPlaying, setVideoPlaying] = useState(false);
+            const [latestGames, setLatestGames] = useState([]);
+            const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
+            const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+            
+            // New features
+            const [favorites, setFavorites] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_favorites');
+                    return saved ? JSON.parse(saved) : [];
+                } catch { return []; }
+            });
+            const [downloadHistory, setDownloadHistory] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_downloads');
+                    return saved ? JSON.parse(saved) : [];
+                } catch { return []; }
+            });
+            const [ratings, setRatings] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_ratings');
+                    return saved ? JSON.parse(saved) : {};
+                } catch { return {}; }
+            });
+            const [darkMode, setDarkMode] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_darkMode');
+                    return saved !== null ? JSON.parse(saved) : true;
+                } catch { return true; }
+            });
+            const [showStats, setShowStats] = useState(false);
+            const [showGuide, setShowGuide] = useState(false);
+            const [newGamesCount, setNewGamesCount] = useState(0);
+            const [coopData, setCoopData] = useState(null);
+            const [coopLoading, setCoopLoading] = useState(false);
 
             const GITHUB_USERNAME = 'ShayneVi';
             const GITHUB_REPO = 'OnlineFix';
             const GAMES_PER_PAGE = 30;
-
+            const VERCEL_BASE_URL = 'https://online-fix-store.vercel.app';
             const steamCache = {};
+
+            // Save to localStorage
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_favorites', JSON.stringify(favorites));
+            }, [favorites]);
+
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_downloads', JSON.stringify(downloadHistory));
+            }, [downloadHistory]);
+
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_ratings', JSON.stringify(ratings));
+            }, [ratings]);
+
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_darkMode', JSON.stringify(darkMode));
+                document.body.className = darkMode ? '' : 'light-mode';
+            }, [darkMode]);
+
+            // Keyboard shortcuts
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                    switch(e.key) {
+                        case 'Escape':
+                            if (selectedGame) {
+                                setSelectedGame(null);
+                                setCurrentView('store');
+                            }
+                            if (lightboxImage) setLightboxImage(null);
+                            break;
+                        case 'ArrowLeft':
+                            if (currentView === 'store' && !selectedGame && currentPage > 1) {
+                                setCurrentPage(p => p - 1);
+                            }
+                            break;
+                        case 'ArrowRight':
+                            if (currentView === 'store' && !selectedGame) {
+                                const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
+                                if (currentPage < totalPages) {
+                                    setCurrentPage(p => p + 1);
+                                }
+                            }
+                            break;
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, [currentView, selectedGame, currentPage, lightboxImage]);
+
+            // Check for new games
+            useEffect(() => {
+                const checkForNewGames = () => {
+                    try {
+                        const lastCheck = localStorage.getItem('onlineFixStore_lastGameCount');
+                        if (lastCheck && games.length > 0) {
+                            const lastCount = parseInt(lastCheck);
+                            if (games.length > lastCount) {
+                                setNewGamesCount(games.length - lastCount);
+                            }
+                        }
+                        if (games.length > 0) {
+                            localStorage.setItem('onlineFixStore_lastGameCount', games.length.toString());
+                        }
+                    } catch (e) {}
+                };
+
+                checkForNewGames();
+            }, [games.length]);
+
+            const fetchFromVercel = async (filename) => {
+                try {
+                    if (window.electronAPI) {
+                        return await window.electronAPI.fetchRemoteFile(`${VERCEL_BASE_URL}/${filename}`);
+                    } else {
+                        const response = await fetch(`/${filename}`);
+                        if (!response.ok) throw new Error(`Could not load ${filename}`);
+                        return await response.text();
+                    }
+                } catch (error) {
+                    console.error(`Error fetching ${filename}:`, error);
+                    throw error;
+                }
+            };
 
             useEffect(() => {
                 const loadGames = async () => {
                     try {
-                        const response = await fetch('/appIDs.txt');
-                        if (!response.ok) throw new Error('Could not load appIDs.txt');
+                        const text = await fetchFromVercel('appIDs.txt');
+                        const appIDsFromFile = text.split(/[\n,]/).map(id => id.trim()).filter(id => id.length > 0);
                         
-                        const text = await response.text();
-                        const appIDsFromFile = text
-                            .split(/[\n,]/)
-                            .map(id => id.trim())
-                            .filter(id => id.length > 0);
-                        
-                        if (appIDsFromFile.length === 0) {
-                            throw new Error('No App IDs found in file');
-                        }
+                        if (appIDsFromFile.length === 0) throw new Error('No App IDs found');
 
                         const gameList = appIDsFromFile.map(appID => ({
                             id: appID,
@@ -108,6 +222,7 @@
 
                         setGames(gameList);
                         setLoading(false);
+                        setLatestGames(gameList.slice(-18).reverse());
                     } catch (error) {
                         console.error('Error loading App IDs:', error);
                         setGames([]);
@@ -117,27 +232,25 @@
 
                 loadGames();
 
-                fetch('/Home.txt')
-                    .then(res => {
-                        if (!res.ok) throw new Error('File not found');
-                        return res.text();
-                    })
+                fetchFromVercel('Home.txt')
                     .then(text => setHomeContent(text))
-                    .catch(() => {
-                        fetch('/home.txt')
-                            .then(res => res.text())
-                            .then(text => setHomeContent(text))
-                            .catch(() => setHomeContent('Welcome to Online Fix Store!\n\nYour one-stop destination for game fixes and updates.'));
-                    });
+                    .catch(() => setHomeContent('Welcome to Online Fix Store!\n\nYour one-stop destination for game fixes and updates.'));
             }, []);
 
             const fetchGameData = async (appID) => {
-                if (steamCache[appID]) {
-                    return steamCache[appID];
-                }
+                if (steamCache[appID]) return steamCache[appID];
 
                 try {
-                    const response = await fetch(`/api/steam?appid=${appID}`);
+                    const apiUrl = window.electronAPI 
+                        ? `${VERCEL_BASE_URL}/api/steam?appid=${appID}`
+                        : `/api/steam?appid=${appID}`;
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    
+                    const response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
                     const data = await response.json();
                     
                     if (data[appID] && data[appID].success) {
@@ -176,7 +289,14 @@
                         return gameInfo;
                     }
                 } catch (error) {
-                    console.error(`Error fetching ${appID}:`, error);
+                    const fallbackInfo = {
+                        name: `Game ${appID}`,
+                        headerImage: '',
+                        tags: [],
+                        genres: []
+                    };
+                    steamCache[appID] = fallbackInfo;
+                    return fallbackInfo;
                 }
                 
                 return null;
@@ -184,35 +304,51 @@
 
             useEffect(() => {
                 const fetchAllGames = async () => {
-                    const gamesToFetch = games.filter(game => 
-                        game.name.startsWith('Game ') && !steamCache[game.appID]
-                    );
-                    
+                    const gamesToFetch = games.filter(game => game.name.startsWith('Game ') && !steamCache[game.appID]);
                     if (gamesToFetch.length === 0) return;
                     
-                    const batchSize = 10;
-                    for (let i = 0; i < gamesToFetch.length; i += batchSize) {
-                        const batch = gamesToFetch.slice(i, i + batchSize);
+                    const visibleGames = currentGames.filter(game => game.name.startsWith('Game ') && !steamCache[game.appID]);
+                    
+                    if (visibleGames.length > 0) {
+                        const visibleResults = await Promise.allSettled(visibleGames.map(game => fetchGameData(game.appID)));
                         
-                        const results = await Promise.all(
-                            batch.map(game => fetchGameData(game.appID))
-                        );
+                        visibleResults.forEach((result, idx) => {
+                            if (result.status === 'fulfilled' && result.value) {
+                                const game = visibleGames[idx];
+                                setGames(prevGames =>
+                                    prevGames.map(g =>
+                                        g.appID === game.appID 
+                                            ? { ...g, name: result.value.name, headerImage: result.value.headerImage, tags: result.value.tags, genres: result.value.genres }
+                                            : g
+                                    )
+                                );
+                            }
+                        });
+                    }
+                    
+                    const remainingGames = gamesToFetch.filter(game => !visibleGames.some(vg => vg.appID === game.appID));
+                    if (remainingGames.length === 0) return;
+                    
+                    const batchSize = 15;
+                    for (let i = 0; i < remainingGames.length; i += batchSize) {
+                        const batch = remainingGames.slice(i, i + batchSize);
+                        const results = await Promise.allSettled(batch.map(game => fetchGameData(game.appID)));
                         
-                        results.forEach((data, idx) => {
-                            if (data) {
+                        results.forEach((result, idx) => {
+                            if (result.status === 'fulfilled' && result.value) {
                                 const game = batch[idx];
                                 setGames(prevGames =>
                                     prevGames.map(g =>
                                         g.appID === game.appID 
-                                            ? { ...g, name: data.name, headerImage: data.headerImage, tags: data.tags, genres: data.genres }
+                                            ? { ...g, name: result.value.name, headerImage: result.value.headerImage, tags: result.value.tags, genres: result.value.genres }
                                             : g
                                     )
                                 );
                             }
                         });
                         
-                        if (i + batchSize < gamesToFetch.length) {
-                            await new Promise(resolve => setTimeout(resolve, 200));
+                        if (i + batchSize < remainingGames.length) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
                         }
                     }
                 };
@@ -220,12 +356,24 @@
                 if (!loading && games.length > 0 && currentView === 'store') {
                     fetchAllGames();
                 }
-            }, [games.length, currentView, loading]);
+            }, [games.length, currentView, loading, currentPage]);
 
             const fetchSteamData = async (appID) => {
                 try {
                     setSteamLoading(true);
-                    const response = await fetch(`/api/steam?appid=${appID}`);
+                    setSteamData(null);
+                    setCoopData(null);
+                    
+                    const apiUrl = window.electronAPI 
+                        ? `${VERCEL_BASE_URL}/api/steam?appid=${appID}`
+                        : `/api/steam?appid=${appID}`;
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    
+                    const response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
                     const data = await response.json();
                     
                     if (data[appID] && data[appID].success) {
@@ -252,10 +400,17 @@
                                 game.appID === appID ? { ...game, name: gameData.name } : game
                             )
                         );
+                        
+                        // Fetch Co-Op data after getting game name
+                        if (gameData.name) {
+                            console.log('Triggering co-op fetch for:', gameData.name);
+                            fetchCoopData(gameData.name);
+                        }
                     } else {
                         throw new Error('Game not found');
                     }
                 } catch (error) {
+                    console.error('Error fetching Steam data:', error);
                     setSteamData({
                         name: `Game ${appID}`,
                         header_image: '',
@@ -273,16 +428,151 @@
                 }
             };
 
+            const fetchCoopData = async (gameName) => {
+                try {
+                    setCoopLoading(true);
+                    setCoopData(null);
+                    
+                    console.log('Fetching co-op data for:', gameName);
+                    
+                    // First, try to fetch from manual database (fallback)
+                    try {
+                        const manualResponse = await fetch('/coopData.json');
+                        console.log('Manual DB fetch status:', manualResponse.ok);
+                        
+                        if (manualResponse.ok) {
+                            const manualData = await manualResponse.json();
+                            console.log('Manual DB loaded, checking for game:', gameName);
+                            console.log('Available games in DB:', Object.keys(manualData.games || {}));
+                            
+                            if (manualData.games && manualData.games[gameName]) {
+                                const gameData = manualData.games[gameName];
+                                console.log('Found game in manual DB:', gameData);
+                                
+                                // If maxPlayers is not set, try to extract from player strings
+                                if (!gameData.maxPlayers) {
+                                    const extractPlayers = (str) => {
+                                        if (!str) return 0;
+                                        const match = str.match(/(\d+)/);
+                                        return match ? parseInt(match[1]) : 0;
+                                    };
+                                    const localPlayers = extractPlayers(gameData.localCoopPlayers);
+                                    const onlinePlayers = extractPlayers(gameData.onlineCoopPlayers);
+                                    gameData.maxPlayers = Math.max(localPlayers, onlinePlayers) || null;
+                                    console.log('Extracted maxPlayers:', gameData.maxPlayers);
+                                }
+                                
+                                setCoopData(gameData);
+                                setCoopLoading(false);
+                                return;
+                            } else {
+                                console.log('Game not found in manual DB');
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Manual co-op database error:', e);
+                    }
+                    
+                    // If not in manual database, try the API
+                    console.log('Trying API fetch...');
+                    const searchQuery = encodeURIComponent(gameName);
+                    const apiUrl = window.electronAPI 
+                        ? `${VERCEL_BASE_URL}/api/coop?name=${searchQuery}`
+                        : `/api/coop?name=${searchQuery}`;
+                    
+                    console.log('API URL:', apiUrl);
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    
+                    const response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    console.log('API response status:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('API data received:', data);
+                        
+                        // Extract maxPlayers if not provided
+                        if (data && !data.maxPlayers) {
+                            const extractPlayers = (str) => {
+                                if (!str) return 0;
+                                const match = str.match(/(\d+)/);
+                                return match ? parseInt(match[1]) : 0;
+                            };
+                            const localPlayers = extractPlayers(data.localCoopPlayers);
+                            const onlinePlayers = extractPlayers(data.onlineCoopPlayers);
+                            data.maxPlayers = Math.max(localPlayers, onlinePlayers) || null;
+                        }
+                        setCoopData(data);
+                    } else {
+                        console.log('API returned non-OK status');
+                    }
+                } catch (error) {
+                    console.log('Co-Op data fetch error:', error);
+                    setCoopData(null);
+                } finally {
+                    setCoopLoading(false);
+                }
+            };
+
             const handleGameClick = (game) => {
                 setSelectedGame(game);
                 setCurrentView('game');
+                setCoopData(null);
                 fetchSteamData(game.appID);
                 setVideoPlaying(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
+            const toggleFavorite = (appID) => {
+                setFavorites(prev => 
+                    prev.includes(appID) 
+                        ? prev.filter(id => id !== appID)
+                        : [...prev, appID]
+                );
+            };
+
             const handleDownload = (game) => {
-                window.open(game.downloadUrl, '_blank');
+                const link = document.createElement('a');
+                link.href = game.downloadUrl;
+                link.download = '';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                const downloadEntry = {
+                    appID: game.appID,
+                    name: game.name,
+                    timestamp: Date.now()
+                };
+                setDownloadHistory(prev => {
+                    const filtered = prev.filter(d => d.appID !== game.appID);
+                    return [downloadEntry, ...filtered].slice(0, 50);
+                });
+            };
+
+            const removeFromDownloads = (appID) => {
+                setDownloadHistory(prev => prev.filter(d => d.appID !== appID));
+            };
+
+            // FIX #3: Modified to allow removing ratings by clicking the same star
+            const setGameRating = (appID, rating) => {
+                setRatings(prev => {
+                    // If clicking the same rating, remove it
+                    if (prev[appID] === rating) {
+                        const newRatings = { ...prev };
+                        delete newRatings[appID];
+                        return newRatings;
+                    }
+                    // Otherwise set the new rating
+                    return {
+                        ...prev,
+                        [appID]: rating
+                    };
+                });
             };
 
             const stripHtml = (html) => {
@@ -295,6 +585,17 @@
                 const matchesSearch = game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesTag = !selectedTag || (game.tags && game.tags.some(tag => tag.name === selectedTag));
                 const matchesGenre = !selectedGenre || (game.genres && game.genres.some(genre => genre.description === selectedGenre));
+                
+                if (selectedTag === 'LATEST_GAMES_FILTER') {
+                    return latestGames.some(lg => lg.appID === game.appID) && matchesSearch;
+                }
+                if (selectedTag === 'FAVORITES_FILTER') {
+                    return favorites.includes(game.appID) && matchesSearch;
+                }
+                if (selectedTag === 'DOWNLOADED_FILTER') {
+                    return downloadHistory.some(d => d.appID === game.appID) && matchesSearch;
+                }
+                
                 return matchesSearch && matchesTag && matchesGenre;
             });
 
@@ -322,64 +623,107 @@
                 return pages;
             };
 
+            const stats = {
+                totalGames: games.length,
+                totalDownloads: downloadHistory.length,
+                totalFavorites: favorites.length,
+                averageRating: Object.values(ratings).length > 0 
+                    ? (Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length).toFixed(1)
+                    : 0,
+                topGenres: allGenres.slice(0, 5),
+                recentDownloads: downloadHistory.slice(0, 10)
+            };
+
             if (loading) {
                 return (
-                    <div className="flex items-center justify-center h-screen bg-gray-900">
+                    <div className={`flex items-center justify-center h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
                         <div className="text-center">
                             <Loader />
-                            <p className="text-white text-lg mt-4">Loading games...</p>
+                            <p className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg mt-4`}>Loading games...</p>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="flex min-h-screen bg-gray-900 text-white">
-                    <div className="w-64 bg-gray-800 border-r border-gray-700 fixed h-full overflow-y-auto">
-                        <div className="p-6">
-                            <h1 className="text-2xl font-bold mb-8 text-blue-400">Online Fix Store</h1>
-                            
-                            <nav className="space-y-2">
-                                <button
-                                    onClick={() => setCurrentView('home')}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'home' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                                    }`}
-                                >
-                                    <Home /> Home
-                                </button>
+                <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+                    {leftSidebarOpen && (
+                        <div className={`w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-r fixed h-full overflow-y-auto`}>
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h1 className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Online Fix Store</h1>
+                                    <button onClick={() => setLeftSidebarOpen(false)} className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-2 rounded transition`}>
+                                        <ChevronLeft />
+                                    </button>
+                                </div>
                                 
-                                <button
-                                    onClick={() => { setCurrentView('store'); setSelectedGame(null); }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'store' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                                    }`}
-                                >
-                                    <Store /> Store
+                                <button onClick={() => setDarkMode(!darkMode)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition mb-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}`}>
+                                    {darkMode ? <Sun /> : <Moon />}
+                                    {darkMode ? 'Light Mode' : 'Dark Mode'}
                                 </button>
-                                
-                                <button
-                                    onClick={() => setCurrentView('contact')}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${
-                                        currentView === 'contact' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                                    }`}
-                                >
-                                    <Mail /> Contact
-                                </button>
-                            </nav>
-                        </div>
-                    </div>
 
-                    <div className="flex-1 ml-64">
+                                {newGamesCount > 0 && (
+                                    <div className="mb-4 p-3 bg-blue-600 rounded-lg text-white text-sm flex items-center gap-2">
+                                        <Bell />
+                                        <span>{newGamesCount} new game{newGamesCount > 1 ? 's' : ''} added!</span>
+                                        <button onClick={() => setNewGamesCount(0)} className="ml-auto"><X /></button>
+                                    </div>
+                                )}
+                                
+                                <nav className="space-y-2">
+                                    <button onClick={() => setCurrentView('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'home' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Home /> Home
+                                    </button>
+                                    
+                                    {/* FIX #2: Clear filters when clicking Store */}
+                                    <button onClick={() => { setCurrentView('store'); setSelectedGame(null); setSelectedTag(null); setSelectedGenre(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'store' && !selectedTag && !selectedGenre ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Store /> Store
+                                    </button>
+
+                                    <button onClick={() => { setCurrentView('store'); setSelectedGame(null); setSelectedTag('FAVORITES_FILTER'); setSelectedGenre(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${selectedTag === 'FAVORITES_FILTER' ? 'bg-pink-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Heart filled={true} /> Favorites ({favorites.length})
+                                    </button>
+
+                                    <button onClick={() => { setCurrentView('store'); setSelectedGame(null); setSelectedTag('DOWNLOADED_FILTER'); setSelectedGenre(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${selectedTag === 'DOWNLOADED_FILTER' ? 'bg-green-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <History /> Downloads ({downloadHistory.length})
+                                    </button>
+
+                                    <button onClick={() => setShowStats(true)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <BarChart /> Statistics
+                                    </button>
+
+                                    <button onClick={() => setShowGuide(true)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Book /> Installation Guide
+                                    </button>
+                                    
+                                    <button onClick={() => setCurrentView('contact')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'contact' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Mail /> Contact
+                                    </button>
+                                </nav>
+
+                                <div className={`mt-8 p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg text-xs`}>
+                                    <p className="font-semibold mb-2">Keyboard Shortcuts:</p>
+                                    <p>← → Navigate pages</p>
+                                    <p>Esc Back/Close</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {!leftSidebarOpen && (
+                        <button onClick={() => setLeftSidebarOpen(true)} className={`fixed top-6 left-2 z-50 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-1.5 rounded transition`} style={{ width: '32px', height: '32px' }}>
+                            <ChevronRight />
+                        </button>
+                    )}
+
+                    <div className={`flex-1 transition-all duration-300 ${leftSidebarOpen ? 'ml-64' : 'ml-0'}`}>
                         {currentView === 'home' && (
                             <div className="p-8 max-w-4xl mx-auto">
-                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
                                     <h2 className="text-4xl font-bold mb-6">Welcome</h2>
-                                    <div className="text-gray-300 leading-relaxed">
+                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
                                         {homeContent.split('\n').map((line, idx) => (
-                                            <p key={idx} className={line.trim() === '' ? 'h-4' : 'mb-2'}>
-                                                {line}
-                                            </p>
+                                            <p key={idx} className={line.trim() === '' ? 'h-4' : 'mb-2'}>{line}</p>
                                         ))}
                                     </div>
                                 </div>
@@ -388,45 +732,18 @@
 
                         {currentView === 'contact' && (
                             <div className="p-8 max-w-4xl mx-auto">
-                                <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
                                     <h2 className="text-4xl font-bold mb-6">Contact Us</h2>
-                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed space-y-4`}>
                                         <p>Get in touch with us for support, questions, or feedback.</p>
                                         <div className="space-y-4">
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
+                                            <div className={`flex items-start gap-3 p-3 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded`}>
                                                 <Mail />
                                                 <div>
-                                                    <p className="font-semibold text-white">Email</p>
-                                                    <a href="mailto:fixitf759@gmail.com" className="text-blue-400 hover:text-blue-300 break-all">
-                                                        fixitf759@gmail.com
-                                                    </a>
+                                                    <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Email</p>
+                                                    <a href="mailto:fixitf759@gmail.com" className="text-blue-400 hover:text-blue-300 break-all">fixitf759@gmail.com</a>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="mt-1">
-                                                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
-                                                </svg>
-                                                <div>
-                                                    <p className="font-semibold text-white">Discord</p>
-                                                    <p className="text-blue-400">lindong6631</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3 p-3 bg-gray-700 rounded">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-1">
-                                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-                                                </svg>
-                                                <div>
-                                                    <p className="font-semibold text-white">GitHub Issues</p>
-                                                    <a href="https://github.com/ShayneVi/OnlineFixStore/issues" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 break-all">
-                                                        Report an Issue
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-                                            <p className="text-sm text-gray-300">
-                                                For game fix requests, issues with downloads, or general questions, please use the GitHub Issues page or send an email.
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -437,66 +754,54 @@
                             <div className="flex">
                                 <div className="flex-1 p-6">
                                     <h1 className="text-4xl font-bold mb-6">Online Fix Store</h1>
-
-                                    <div className="mb-8">
-                                        <input
-                                            type="text"
-                                            placeholder="Search by App ID or game name..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-                                        />
-                                    </div>
-
-                                    {(selectedTag || selectedGenre) && (
-                                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                                            <span className="text-gray-400">Filtering by:</span>
-                                            {selectedTag && (
-                                                <div className="flex items-center gap-2 px-3 py-1 bg-cyan-600 rounded-full text-sm text-white">
-                                                    <span>{selectedTag}</span>
-                                                    <button onClick={() => setSelectedTag(null)} className="hover:text-gray-200">×</button>
-                                                </div>
-                                            )}
-                                            {selectedGenre && (
-                                                <div className="flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-full text-sm text-white">
-                                                    <span>{selectedGenre}</span>
-                                                    <button onClick={() => setSelectedGenre(null)} className="hover:text-gray-200">×</button>
-                                                </div>
-                                            )}
-                                            <button 
-                                                onClick={() => { setSelectedTag(null); setSelectedGenre(null); }} 
-                                                className="text-gray-400 hover:text-white text-sm underline"
-                                            >
-                                                Clear all
-                                            </button>
-                                        </div>
-                                    )}
+                                    <input type="text" placeholder="Search by App ID or game name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`w-full px-4 py-3 mb-8 ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'} rounded-lg border focus:border-blue-500 focus:outline-none`} />
 
                                     {filteredGames.length === 0 ? (
                                         <div className="text-center py-12">
-                                            <p className="text-gray-400 text-lg">No games found</p>
+                                            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-lg`}>No games found</p>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="grid grid-cols-6 gap-3 mb-8">
+                                            <div className="grid grid-cols-6 gap-3 mb-8" style={{ gridAutoRows: 'auto' }}>
                                                 {currentGames.map(game => (
-                                                    <div key={game.id} onClick={() => handleGameClick(game)} className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg">
-                                                        <div className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
+                                                    <div key={game.id} className={`${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg relative`}>
+                                                        <div onClick={() => handleGameClick(game)} className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
                                                             {game.headerImage ? (
-                                                                <img 
-                                                                    src={game.headerImage} 
-                                                                    alt={game.name}
-                                                                    className="absolute inset-0 w-full h-full object-cover"
-                                                                />
+                                                                <img src={game.headerImage} alt={game.name} className="absolute inset-0 w-full h-full object-cover" />
                                                             ) : (
                                                                 <span className="text-center font-semibold text-xs leading-tight z-10 p-2 text-white">{game.name}</span>
                                                             )}
+                                                            {downloadHistory.some(d => d.appID === game.appID) && (
+                                                                <div className="absolute top-1 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded">✓</div>
+                                                            )}
+                                                            {/* Show remove button when in downloads view */}
+                                                            {selectedTag === 'DOWNLOADED_FILTER' && (
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); removeFromDownloads(game.appID); }} 
+                                                                    className="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded z-10"
+                                                                    title="Remove from downloads"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            )}
                                                         </div>
                                                         <div className="p-2">
-                                                            <p className="text-xs text-white font-semibold truncate" title={game.name}>
-                                                                {!game.name.startsWith('Game ') ? game.name : ''}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400">ID: {game.appID}</p>
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <p className={`text-xs ${darkMode ? 'text-white' : 'text-gray-900'} font-semibold truncate flex-1`} title={game.name}>
+                                                                    {!game.name.startsWith('Game ') ? game.name : ''}
+                                                                </p>
+                                                                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(game.appID); }} className="text-pink-500 hover:text-pink-600">
+                                                                    <Heart filled={favorites.includes(game.appID)} />
+                                                                </button>
+                                                            </div>
+                                                            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>ID: {game.appID}</p>
+                                                            {ratings[game.appID] && (
+                                                                <div className="flex gap-0.5 mt-1">
+                                                                    {[1, 2, 3, 4, 5].map(star => (
+                                                                        <Star key={star} filled={star <= ratings[game.appID]} />
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -504,152 +809,89 @@
 
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="flex items-center gap-2">
-                                                    <button 
-                                                        onClick={() => setCurrentPage(1)} 
-                                                        disabled={currentPage === 1}
-                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
-                                                    >
-                                                        First
-                                                    </button>
-                                                    
-                                                    <button 
-                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                                                        disabled={currentPage === 1}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
-                                                    >
-                                                        <ChevronLeft /> Previous
-                                                    </button>
-
+                                                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className={`px-3 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} disabled:opacity-50 rounded transition text-sm`}>First</button>
+                                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`flex items-center gap-2 px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} disabled:opacity-50 rounded transition`}><ChevronLeft /> Previous</button>
                                                     <div className="flex gap-1">
                                                         {getPageNumbers().map(pageNum => (
-                                                            <button
-                                                                key={pageNum}
-                                                                onClick={() => setCurrentPage(pageNum)}
-                                                                className={`px-3 py-2 rounded transition ${
-                                                                    currentPage === pageNum 
-                                                                        ? 'bg-blue-600 text-white' 
-                                                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                                                }`}
-                                                            >
-                                                                {pageNum}
-                                                            </button>
+                                                            <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`px-3 py-2 rounded transition ${currentPage === pageNum ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}>{pageNum}</button>
                                                         ))}
                                                     </div>
-
-                                                    <button 
-                                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                                                        disabled={currentPage === totalPages}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition"
-                                                    >
-                                                        Next <ChevronRight />
-                                                    </button>
-                                                    
-                                                    <button 
-                                                        onClick={() => setCurrentPage(totalPages)} 
-                                                        disabled={currentPage === totalPages}
-                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded transition text-sm"
-                                                    >
-                                                        Last
-                                                    </button>
+                                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className={`flex items-center gap-2 px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} disabled:opacity-50 rounded transition`}>Next <ChevronRight /></button>
+                                                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className={`px-3 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} disabled:opacity-50 rounded transition text-sm`}>Last</button>
                                                 </div>
-                                                
-                                                <span className="text-gray-300 text-sm">
-                                                    Page {currentPage} of {totalPages} ({filteredGames.length} games)
-                                                </span>
+                                                <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>Page {currentPage} of {totalPages} ({filteredGames.length} games)</span>
                                             </div>
                                         </>
                                     )}
                                 </div>
 
-                                <div className="w-72 bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto custom-scrollbar" style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
-                                    <details className="mb-6">
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition pr-6">
-                                            Browse by Tags
-                                        </summary>
-                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
-                                            {allTags.length === 0 ? (
-                                                <p className="text-gray-400 text-sm">Loading tags...</p>
-                                            ) : (
-                                                allTags.map((tag, idx) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => setSelectedTag(tag.name)}
-                                                        className={`w-full text-left px-3 py-2 rounded transition text-sm ${
-                                                            selectedTag === tag.name 
-                                                                ? 'bg-cyan-600 text-white' 
-                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                                        }`}
-                                                    >
-                                                        {tag.name}
-                                                    </button>
-                                                ))
-                                            )}
-                                        </div>
-                                    </details>
+                                <div className="relative">
+                                    {rightSidebarOpen && (
+                                        <button onClick={() => setRightSidebarOpen(false)} className={`absolute top-4 -left-12 z-50 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-2 rounded transition`}><ChevronRight /></button>
+                                    )}
+                                    
+                                    {rightSidebarOpen && (
+                                        <div className={`w-72 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-l p-6 overflow-y-auto custom-scrollbar`} style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
+                                            <details className="mb-6">
+                                                <summary className={`text-xl font-bold mb-4 cursor-pointer ${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'} transition pr-6`}>Latest Games</summary>
+                                                <div className="mt-4">
+                                                    <button onClick={() => { setSelectedTag('LATEST_GAMES_FILTER'); setSelectedGenre(null); }} className={`w-full text-left px-3 py-2 rounded transition text-sm ${selectedTag === 'LATEST_GAMES_FILTER' ? 'bg-purple-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}>Latest 18 Games</button>
+                                                </div>
+                                            </details>
 
-                                    <details className="mb-6">
-                                        <summary className="text-xl font-bold mb-4 cursor-pointer hover:text-blue-400 transition pr-6">
-                                            Browse by Genres
-                                        </summary>
-                                        <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
-                                            {allGenres.length === 0 ? (
-                                                <p className="text-gray-400 text-sm">Loading genres...</p>
-                                            ) : (
-                                                allGenres.map((genre, idx) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => setSelectedGenre(genre.description)}
-                                                        className={`w-full text-left px-3 py-2 rounded transition text-sm ${
-                                                            selectedGenre === genre.description 
-                                                                ? 'bg-blue-600 text-white' 
-                                                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                                        }`}
-                                                    >
-                                                        {genre.description}
-                                                    </button>
-                                                ))
-                                            )}
+                                            <details className="mb-6">
+                                                <summary className={`text-xl font-bold mb-4 cursor-pointer ${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'} transition pr-6`}>Browse by Tags</summary>
+                                                <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                                                    {allTags.length === 0 ? (
+                                                        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Loading tags...</p>
+                                                    ) : (
+                                                        allTags.map((tag, idx) => (
+                                                            <button key={idx} onClick={() => { setSelectedTag(tag.name); setSelectedGenre(null); }} className={`w-full text-left px-3 py-2 rounded transition text-sm ${selectedTag === tag.name ? 'bg-cyan-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}>{tag.name}</button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </details>
+
+                                            <details className="mb-6">
+                                                <summary className={`text-xl font-bold mb-4 cursor-pointer ${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'} transition pr-6`}>Browse by Genres</summary>
+                                                <div className="mt-4 space-y-2" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                                                    {allGenres.length === 0 ? (
+                                                        <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Loading genres...</p>
+                                                    ) : (
+                                                        allGenres.map((genre, idx) => (
+                                                            <button key={idx} onClick={() => { setSelectedGenre(genre.description); setSelectedTag(null); }} className={`w-full text-left px-3 py-2 rounded transition text-sm ${selectedGenre === genre.description ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}>{genre.description}</button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </details>
                                         </div>
-                                    </details>
+                                    )}
+                                    
+                                    {!rightSidebarOpen && (
+                                        <button onClick={() => setRightSidebarOpen(true)} className={`fixed top-4 right-4 z-50 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-2 rounded transition`}><ChevronLeft /></button>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {currentView === 'game' && selectedGame && steamData && (
                             <div className="p-6">
-                                <div className="sticky top-0 bg-gray-900 z-10 pb-4 mb-4">
-                                    <button 
-                                        onClick={() => { setSelectedGame(null); setCurrentView('store'); }} 
-                                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition"
-                                    >
-                                        ← Back to Store
-                                    </button>
+                                <div className={`sticky top-0 ${darkMode ? 'bg-gray-900' : 'bg-white'} z-10 pb-4 mb-4`}>
+                                    <button onClick={() => { setSelectedGame(null); setCurrentView('store'); }} className={`px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} rounded transition`}>← Back to Store</button>
                                 </div>
 
                                 <div className="max-w-5xl mx-auto">
-                                    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                                    <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg overflow-hidden shadow-xl`}>
                                         {steamData.movies && steamData.movies.length > 0 && !videoPlaying ? (
                                             <div className="relative w-full h-80 bg-black">
-                                                <img 
-                                                    src={steamData.movies[0].thumbnail} 
-                                                    alt="Video thumbnail" 
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button 
-                                                    onClick={() => setVideoPlaying(true)}
-                                                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 hover:bg-opacity-60 transition"
-                                                >
+                                                <img src={steamData.movies[0].thumbnail} alt="Video thumbnail" className="w-full h-full object-cover" />
+                                                <button onClick={() => setVideoPlaying(true)} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 hover:bg-opacity-60 transition">
                                                     <Play />
                                                 </button>
                                             </div>
                                         ) : steamData.movies && steamData.movies.length > 0 && videoPlaying ? (
                                             <div className="relative w-full h-80 bg-black">
-                                                <video 
-                                                    controls 
-                                                    autoPlay 
-                                                    className="w-full h-full"
-                                                    src={steamData.movies[0].mp4?.max || steamData.movies[0].webm?.max}
-                                                >
+                                                <video controls autoPlay className="w-full h-full" src={steamData.movies[0].mp4?.max || steamData.movies[0].webm?.max}>
                                                     Your browser does not support the video tag.
                                                 </video>
                                             </div>
@@ -658,12 +900,29 @@
                                         ) : null}
 
                                         <div className="p-8">
-                                            <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
-                                            <p className="text-sm text-gray-400 mb-6">App ID: {selectedGame.appID}</p>
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div className="flex-1">
+                                                    <h1 className="text-5xl font-bold mb-2">{steamData.name}</h1>
+                                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>App ID: {selectedGame.appID}</p>
+                                                    
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="text-sm">Rate this game:</span>
+                                                        {[1, 2, 3, 4, 5].map(star => (
+                                                            <button key={star} onClick={() => setGameRating(selectedGame.appID, star)} className="text-yellow-500 hover:text-yellow-600">
+                                                                <Star filled={star <= (ratings[selectedGame.appID] || 0)} />
+                                                            </button>
+                                                        ))}
+                                                        {ratings[selectedGame.appID] && <span className="text-sm ml-2">({ratings[selectedGame.appID]}/5) - Click same star to remove</span>}
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => toggleFavorite(selectedGame.appID)} className="text-pink-500 hover:text-pink-600 ml-4">
+                                                    <Heart filled={favorites.includes(selectedGame.appID)} />
+                                                </button>
+                                            </div>
 
                                             {steamData.short_description && (
-                                                <div className="mb-6 p-4 bg-gray-700 rounded-lg">
-                                                    <p className="text-gray-200 text-lg leading-relaxed">{steamData.short_description}</p>
+                                                <div className={`mb-6 p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                                    <p className={`${darkMode ? 'text-gray-200' : 'text-gray-800'} text-lg leading-relaxed`}>{steamData.short_description}</p>
                                                 </div>
                                             )}
 
@@ -672,13 +931,7 @@
                                                     <h2 className="text-2xl font-semibold mb-4">Screenshots</h2>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                         {steamData.screenshots.slice(0, 6).map((ss, idx) => (
-                                                            <img 
-                                                                key={idx} 
-                                                                src={ss.path_thumbnail} 
-                                                                alt={`Screenshot ${idx + 1}`} 
-                                                                className="rounded hover:opacity-80 transition cursor-pointer"
-                                                                onClick={() => setLightboxImage(ss.path_full)}
-                                                            />
+                                                            <img key={idx} src={ss.path_thumbnail} alt={`Screenshot ${idx + 1}`} className="rounded hover:opacity-80 transition cursor-pointer" onClick={() => setLightboxImage(ss.path_full)} />
                                                         ))}
                                                     </div>
                                                 </div>
@@ -686,8 +939,8 @@
 
                                             {(steamData.about_the_game || steamData.detailed_description) && (
                                                 <div className="mb-8">
-                                                    <h2 className="text-3xl font-bold mb-4 text-blue-400">ABOUT THIS GAME</h2>
-                                                    <div className="text-gray-300 leading-relaxed space-y-4">
+                                                    <h2 className={`text-3xl font-bold mb-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>ABOUT THIS GAME</h2>
+                                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed space-y-4`}>
                                                         {stripHtml(steamData.about_the_game || steamData.detailed_description).split('\n\n').map((paragraph, idx) => (
                                                             paragraph.trim() && <p key={idx}>{paragraph}</p>
                                                         ))}
@@ -695,64 +948,199 @@
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                                {steamData.genres && steamData.genres.length > 0 && (
-                                                    <div>
-                                                        <h2 className="text-xl font-semibold mb-3">Genres</h2>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {steamData.genres.map((genre, idx) => (
-                                                                <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm">{genre.description}</span>
-                                                            ))}
+                                            {/* Co-Op Information Section */}
+                                            {coopLoading && (
+                                                <div className={`mb-8 p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                                    <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                                                        <span>Co-Op Features</span>
+                                                        <div className="animate-spin w-5 h-5"><Loader /></div>
+                                                    </h2>
+                                                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading co-op information...</p>
+                                                </div>
+                                            )}
+
+                                            {!coopLoading && coopData && (
+                                                <div className={`mb-8 p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                                    <h2 className="text-2xl font-semibold mb-4">Co-Op Features</h2>
+                                                    
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>Core Features</h3>
+                                                            
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <p className="font-semibold mb-1">Local Co-Op</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {coopData.localCoop ? (
+                                                                            <>
+                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-green-500">
+                                                                                    <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                                    <path d="M7 12h10M7 6h10M7 18h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                                </svg>
+                                                                                <span className="italic">{coopData.localCoopPlayers || 'Supported'}</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className="text-red-500">✗</span>
+                                                                                <span className="italic">Not Supported</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <p className="font-semibold mb-1">Online Co-Op</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {coopData.onlineCoop ? (
+                                                                            <>
+                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-green-500">
+                                                                                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                                                                                    <path d="M12 3v2M12 19v2M21 12h-2M5 12H3M18.36 18.36l-1.42-1.42M7.05 7.05L5.64 5.64M18.36 5.64l-1.42 1.42M7.05 16.95l-1.41 1.41" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                                </svg>
+                                                                                <span className="italic">{coopData.onlineCoopPlayers || 'Supported'}</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className="text-red-500">✗</span>
+                                                                                <span className="italic">Not Supported</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <p className="font-semibold mb-1">Combo Co-Op (Local + Online)</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {coopData.comboCoop ? (
+                                                                            <>
+                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-green-500">
+                                                                                    <circle cx="9" cy="12" r="2" stroke="currentColor" strokeWidth="2"/>
+                                                                                    <circle cx="15" cy="12" r="2" stroke="currentColor" strokeWidth="2"/>
+                                                                                </svg>
+                                                                                <span className="italic">Supported</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className="text-red-500">✗</span>
+                                                                                <span className="italic">Not Supported</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <p className="font-semibold mb-1">LAN Play or System Link</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {coopData.lanPlay ? (
+                                                                            <>
+                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-green-500">
+                                                                                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+                                                                                    <path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                                </svg>
+                                                                                <span className="italic">Supported</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className="text-red-500">✗</span>
+                                                                                <span className="italic">Not Supported</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Co-Op Extras</h3>
+                                                            
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <p className="font-semibold mb-1">Co-Op Campaign</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {coopData.coopCampaign ? (
+                                                                            <>
+                                                                                <span className="text-green-500">✓</span>
+                                                                                <span className="italic">Available</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span className="text-red-500">✗</span>
+                                                                                <span className="italic">Not Available</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {coopData.popularity && (
+                                                                    <div>
+                                                                        <p className="font-semibold mb-1">Popularity</p>
+                                                                        <span className={`px-3 py-1 ${darkMode ? 'bg-purple-600' : 'bg-purple-500'} rounded text-white`}>
+                                                                            #{coopData.popularity}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                )}
 
-                                                {steamData.categories && steamData.categories.length > 0 && (
-                                                    <div>
-                                                        <h2 className="text-xl font-semibold mb-3">Features</h2>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {steamData.categories.slice(0, 6).map((category, idx) => (
-                                                                <span key={idx} className="px-3 py-1 bg-purple-600 rounded-full text-sm">{category.description}</span>
-                                                            ))}
+                                                    {coopData.source && (
+                                                        <div className="mt-4 pt-4 border-t border-gray-600">
+                                                            <a href={coopData.source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm">
+                                                                View full details on Co-Optimus →
+                                                            </a>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    )}
+                                                </div>
+                                            )}
 
+                                            {!coopLoading && !coopData && (
+                                                <div className={`mb-8 p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg border-l-4 border-yellow-500`}>
+                                                    <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                        ℹ️ Co-Op information not available for this game. Add it to your coopData.json file!
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* FIX #1: Display user_tags on game details page */}
                                             {steamData.user_tags && steamData.user_tags.length > 0 && (
-                                                <div className="mb-8">
-                                                    <h2 className="text-xl font-semibold mb-3">Popular User-Defined Tags</h2>
+                                                <div className="mb-6">
+                                                    <h2 className="text-xl font-semibold mb-3">Tags</h2>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {steamData.user_tags.map((tag, idx) => (
-                                                            <span key={idx} className="px-3 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-sm">
-                                                                {tag.name}
+                                                        {/* Add player count tag if game has co-op features */}
+                                                        {coopData && coopData.maxPlayers && (coopData.localCoop || coopData.onlineCoop) && (
+                                                            <span className="px-3 py-1 bg-green-600 rounded-full text-sm text-white font-semibold">
+                                                                🎮 {coopData.maxPlayers} Players
                                                             </span>
+                                                        )}
+                                                        {steamData.user_tags.slice(0, 15).map((tag, idx) => (
+                                                            <span key={idx} className="px-3 py-1 bg-cyan-600 rounded-full text-sm text-white">{tag.name}</span>
                                                         ))}
                                                     </div>
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                                {steamData.developers && steamData.developers.length > 0 && (
-                                                    <div>
-                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Developer</h2>
-                                                        <p className="text-gray-200">{steamData.developers.join(', ')}</p>
+                                            {steamData.genres && steamData.genres.length > 0 && (
+                                                <div className="mb-6">
+                                                    <h2 className="text-xl font-semibold mb-3">Genres</h2>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {steamData.genres.map((genre, idx) => (
+                                                            <span key={idx} className="px-3 py-1 bg-blue-600 rounded-full text-sm text-white">{genre.description}</span>
+                                                        ))}
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
 
-                                                {steamData.publishers && steamData.publishers.length > 0 && (
-                                                    <div>
-                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Publisher</h2>
-                                                        <p className="text-gray-200">{steamData.publishers.join(', ')}</p>
-                                                    </div>
-                                                )}
+                                            {steamData.developers && steamData.developers.length > 0 && (
+                                                <div className="mb-4">
+                                                    <h2 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Developer</h2>
+                                                    <p className={darkMode ? 'text-gray-200' : 'text-gray-800'}>{steamData.developers.join(', ')}</p>
+                                                </div>
+                                            )}
 
-                                                {steamData.release_date && steamData.release_date.date && (
-                                                    <div>
-                                                        <h2 className="text-lg font-semibold mb-2 text-gray-400">Release Date</h2>
-                                                        <p className="text-gray-200">{steamData.release_date.date}</p>
-                                                    </div>
-                                                )}
+                                            <div className="mb-6">
+                                                <a href={`steam://store/${selectedGame.appID}`} className={`w-full ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition`}>
+                                                    Open in Steam
+                                                </a>
                                             </div>
 
                                             <button onClick={() => handleDownload(selectedGame)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition text-lg">
@@ -765,22 +1153,71 @@
                         )}
 
                         {lightboxImage && (
-                            <div 
-                                className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-                                onClick={() => setLightboxImage(null)}
-                            >
-                                <button 
-                                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition"
-                                    onClick={() => setLightboxImage(null)}
-                                >
+                            <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxImage(null)}>
+                                <button className="absolute top-4 right-4 text-white hover:text-gray-300 transition" onClick={() => setLightboxImage(null)}>
                                     <X />
                                 </button>
-                                <img 
-                                    src={lightboxImage} 
-                                    alt="Full size screenshot" 
-                                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                                    onClick={(e) => e.stopPropagation()}
-                                />
+                                <img src={lightboxImage} alt="Full size screenshot" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+                            </div>
+                        )}
+
+                        {showStats && (
+                            <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setShowStats(false)}>
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-3xl font-bold">Statistics Dashboard</h2>
+                                        <button onClick={() => setShowStats(false)}><X /></button>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className={`p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+                                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Total Games</p>
+                                            <p className="text-3xl font-bold text-blue-500">{stats.totalGames}</p>
+                                        </div>
+                                        <div className={`p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+                                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Total Downloads</p>
+                                            <p className="text-3xl font-bold text-green-500">{stats.totalDownloads}</p>
+                                        </div>
+                                        <div className={`p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+                                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Favorites</p>
+                                            <p className="text-3xl font-bold text-pink-500">{stats.totalFavorites}</p>
+                                        </div>
+                                        <div className={`p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+                                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Average Rating</p>
+                                            <p className="text-3xl font-bold text-yellow-500">{stats.averageRating || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {showGuide && (
+                            <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setShowGuide(false)}>
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-3xl font-bold">Installation Guide</h2>
+                                        <button onClick={() => setShowGuide(false)}><X /></button>
+                                    </div>
+
+                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} space-y-4`}>
+                                        <div>
+                                            <h3 className="text-xl font-semibold mb-2">📥 Step 1: Download the Fix</h3>
+                                            <p>Click the "Download Fix" button on any game page.</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-semibold mb-2">📂 Step 2: Extract the Archive</h3>
+                                            <p>Right-click the downloaded .zip file and select "Extract All".</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-semibold mb-2">🎮 Step 3: Install the Game</h3>
+                                            <p>Make sure you have the base game installed first.</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-semibold mb-2">📋 Step 4: Follow the README</h3>
+                                            <p>The unzipped file will have a folder of the appID. Inside that folder is all you need. Copy all the content of that folder and paste it inside the folder of your game.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

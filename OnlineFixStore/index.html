@@ -429,88 +429,48 @@
             };
 
             const fetchCoopData = async (gameName) => {
+                if (!gameName) return;
+                
+                setCoopLoading(true);
+                setCoopData(null);
+                
                 try {
-                    setCoopLoading(true);
-                    setCoopData(null);
-                    
                     console.log('Fetching co-op data for:', gameName);
                     
-                    // First, try to fetch from manual database (fallback)
+                    // Try manual database first
                     try {
                         const manualResponse = await fetch('/coopData.json');
-                        console.log('Manual DB fetch status:', manualResponse.ok);
-                        
                         if (manualResponse.ok) {
                             const manualData = await manualResponse.json();
-                            console.log('Manual DB loaded, checking for game:', gameName);
-                            console.log('Available games in DB:', Object.keys(manualData.games || {}));
-                            
                             if (manualData.games && manualData.games[gameName]) {
-                                const gameData = manualData.games[gameName];
-                                console.log('Found game in manual DB:', gameData);
-                                
-                                // If maxPlayers is not set, try to extract from player strings
-                                if (!gameData.maxPlayers) {
-                                    const extractPlayers = (str) => {
-                                        if (!str) return 0;
-                                        const match = str.match(/(\d+)/);
-                                        return match ? parseInt(match[1]) : 0;
-                                    };
-                                    const localPlayers = extractPlayers(gameData.localCoopPlayers);
-                                    const onlinePlayers = extractPlayers(gameData.onlineCoopPlayers);
-                                    gameData.maxPlayers = Math.max(localPlayers, onlinePlayers) || null;
-                                    console.log('Extracted maxPlayers:', gameData.maxPlayers);
-                                }
-                                
-                                setCoopData(gameData);
+                                console.log('Found in manual DB');
+                                setCoopData(manualData.games[gameName]);
                                 setCoopLoading(false);
                                 return;
-                            } else {
-                                console.log('Game not found in manual DB');
                             }
                         }
                     } catch (e) {
-                        console.log('Manual co-op database error:', e);
+                        console.log('Manual DB not available');
                     }
                     
-                    // If not in manual database, try the API
-                    console.log('Trying API fetch...');
+                    // Try API
+                    console.log('Trying API...');
                     const searchQuery = encodeURIComponent(gameName);
-                    const apiUrl = window.electronAPI 
-                        ? `${VERCEL_BASE_URL}/api/coop?name=${searchQuery}`
-                        : `/api/coop?name=${searchQuery}`;
+                    const apiUrl = `/api/coop?name=${searchQuery}`;
                     
-                    console.log('API URL:', apiUrl);
-                    
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-                    
-                    const response = await fetch(apiUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    console.log('API response status:', response.status);
+                    const response = await fetch(apiUrl);
+                    console.log('API status:', response.status);
                     
                     if (response.ok) {
                         const data = await response.json();
-                        console.log('API data received:', data);
-                        
-                        // Extract maxPlayers if not provided
-                        if (data && !data.maxPlayers) {
-                            const extractPlayers = (str) => {
-                                if (!str) return 0;
-                                const match = str.match(/(\d+)/);
-                                return match ? parseInt(match[1]) : 0;
-                            };
-                            const localPlayers = extractPlayers(data.localCoopPlayers);
-                            const onlinePlayers = extractPlayers(data.onlineCoopPlayers);
-                            data.maxPlayers = Math.max(localPlayers, onlinePlayers) || null;
-                        }
+                        console.log('API data:', data);
                         setCoopData(data);
                     } else {
-                        console.log('API returned non-OK status');
+                        console.log('API failed with status:', response.status);
+                        setCoopData(null);
                     }
                 } catch (error) {
-                    console.log('Co-Op data fetch error:', error);
+                    console.error('Co-op fetch error:', error);
                     setCoopData(null);
                 } finally {
                     setCoopLoading(false);

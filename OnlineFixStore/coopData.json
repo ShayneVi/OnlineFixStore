@@ -1,5 +1,5 @@
 {
-  "comment": "Co-Op Database - Add your games here. Game names must exactly match Steam names!",
+  "comment": "Manual co-op database - place this in your public folder as coopData.json",
   "games": {
     "Dying Light": {
       "localCoop": false,
@@ -9,6 +9,7 @@
       "comboCoop": false,
       "lanPlay": true,
       "coopCampaign": true,
+      "maxPlayers": 4,
       "popularity": 989,
       "source": "https://www.co-optimus.com/game/2521/pc/dying-light.html"
     },
@@ -20,6 +21,7 @@
       "comboCoop": false,
       "lanPlay": true,
       "coopCampaign": true,
+      "maxPlayers": 2,
       "popularity": 150,
       "source": "https://www.co-optimus.com/game/1637/pc/portal-2.html"
     },
@@ -31,140 +33,9 @@
       "comboCoop": false,
       "lanPlay": true,
       "coopCampaign": true,
+      "maxPlayers": 4,
       "popularity": 45,
       "source": "https://www.co-optimus.com/game/1120/pc/left-4-dead-2.html"
-    },
-    "Borderlands 2": {
-      "localCoop": true,
-      "localCoopPlayers": "2 Players",
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": true,
-      "lanPlay": true,
-      "coopCampaign": true,
-      "popularity": 78,
-      "source": "https://www.co-optimus.com/game/1780/pc/borderlands-2.html"
-    },
-    "Don't Starve Together": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "6 Players",
-      "comboCoop": false,
-      "lanPlay": true,
-      "coopCampaign": false,
-      "popularity": 234,
-      "source": "https://www.co-optimus.com/game/3359/pc/dont-starve-together.html"
-    },
-    "Terraria": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "8 Players",
-      "comboCoop": false,
-      "lanPlay": true,
-      "coopCampaign": false,
-      "popularity": 112,
-      "source": "https://www.co-optimus.com/game/1825/pc/terraria.html"
-    },
-    "Stardew Valley": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": false,
-      "lanPlay": true,
-      "coopCampaign": false,
-      "popularity": 167,
-      "source": "https://www.co-optimus.com/game/4568/pc/stardew-valley.html"
-    },
-    "Divinity: Original Sin 2": {
-      "localCoop": true,
-      "localCoopPlayers": "2 Players",
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": true,
-      "lanPlay": true,
-      "coopCampaign": true,
-      "popularity": 321,
-      "source": "https://www.co-optimus.com/game/4234/pc/divinity-original-sin-2.html"
-    },
-    "It Takes Two": {
-      "localCoop": true,
-      "localCoopPlayers": "2 Players",
-      "onlineCoop": true,
-      "onlineCoopPlayers": "2 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": true,
-      "popularity": 56,
-      "source": "https://www.co-optimus.com/game/5789/pc/it-takes-two.html"
-    },
-    "A Way Out": {
-      "localCoop": true,
-      "localCoopPlayers": "2 Players",
-      "onlineCoop": true,
-      "onlineCoopPlayers": "2 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": true,
-      "popularity": 189,
-      "source": "https://www.co-optimus.com/game/4789/pc/a-way-out.html"
-    },
-    "Overcooked! 2": {
-      "localCoop": true,
-      "localCoopPlayers": "4 Players",
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": true,
-      "lanPlay": false,
-      "coopCampaign": true,
-      "popularity": 278,
-      "source": "https://www.co-optimus.com/game/4912/pc/overcooked-2.html"
-    },
-    "Valheim": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "10 Players",
-      "comboCoop": false,
-      "lanPlay": true,
-      "coopCampaign": false,
-      "popularity": 89,
-      "source": "https://www.co-optimus.com/game/5823/pc/valheim.html"
-    },
-    "Risk of Rain 2": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": false,
-      "popularity": 145,
-      "source": "https://www.co-optimus.com/game/5234/pc/risk-of-rain-2.html"
-    },
-    "Deep Rock Galactic": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": false,
-      "popularity": 98,
-      "source": "https://www.co-optimus.com/game/5456/pc/deep-rock-galactic.html"
-    },
-    "Phasmophobia": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "4 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": false,
-      "popularity": 67,
-      "source": "https://www.co-optimus.com/game/5789/pc/phasmophobia.html"
     }
   }
 }

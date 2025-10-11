@@ -16,17 +16,6 @@ and images, go back a page or two and come back. This is rate limited
 so it needs a bit of time for the rate to reset, and with that many
 games - again be patient.
 
-The view on online-fix.me is still not functionning.
-
----INSTRUCTIONS---
-As for the instructions, you browse the store as if a real store, 
-click on a game, read info, look at pictures and if you like the game 
-and wanna play online, there is a button that say "download fix" - click
-that button, and the fix will download as a appID.zip of the game.
-Unzip the file, it will have a folder of the appID. Inside that folder is 
-all you need. Copy all the content of that folder and paste it inside the 
-folder of your game. The zips do not have password protection.
-
 I will leave a link to the luatools discord server. Check it out
 if you want free games the easy way. Their tool and plugin are
 a great addition to anyone and goes well with this store.
@@ -53,6 +42,4 @@ was updated and the fix either doesn't work anymore, which I will
 remove from the list of games, or that the fix was also updated -
 which I will update as soon as I can.
 
-
 For contacting, visit the contact section on the left.
-

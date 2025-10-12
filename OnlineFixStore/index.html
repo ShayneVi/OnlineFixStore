@@ -289,6 +289,8 @@
             const [steamData, setSteamData] = useState(null);
             const [loading, setLoading] = useState(true);
             const [steamLoading, setSteamLoading] = useState(false);
+            const [onlineFixData, setOnlineFixData] = useState(null); // Playing Through + How to Run
+            const [showHowToRunModal, setShowHowToRunModal] = useState(false);
             const [searchQuery, setSearchQuery] = useState('');
             const [currentView, setCurrentView] = useState('home');
             const [homeContent, setHomeContent] = useState('');
@@ -358,6 +360,43 @@
                 localStorage.setItem('onlineFixStore_showWallpaper', JSON.stringify(showWallpaper));
             }, [showWallpaper]);
 
+            // Background Music Toggle
+            const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_backgroundMusic');
+                    return saved ? JSON.parse(saved) : false; // Default OFF
+                } catch { return false; }
+            });
+
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_backgroundMusic', JSON.stringify(backgroundMusicEnabled));
+            }, [backgroundMusicEnabled]);
+
+            // Audio element ref for background music
+            const audioRef = React.useRef(null);
+
+            useEffect(() => {
+                if (!loading && games.length > 0 && backgroundMusicEnabled) {
+                    // Start music after loading is complete
+                    if (!audioRef.current) {
+                        audioRef.current = new Audio('online fix store menu song.mp3');
+                        audioRef.current.loop = true;
+                        audioRef.current.volume = 0.3; // Set to 30% volume
+                    }
+                    audioRef.current.play().catch(err => {
+                        console.log('Audio autoplay prevented:', err);
+                    });
+                } else if (audioRef.current && !backgroundMusicEnabled) {
+                    audioRef.current.pause();
+                }
+
+                return () => {
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                    }
+                };
+            }, [loading, games.length, backgroundMusicEnabled]);
+
             // Window Mode Settings
             const [windowMode, setWindowMode] = useState(() => {
                 try {
@@ -404,6 +443,7 @@
                     // Actions
                     search: 'Search games...',
                     searchOnline: 'Search on online-fix.me',
+                    howToRun: 'How to Run',
                     openSteam: 'Open in Steam',
                     downloadFix: 'Download Fix',
                     rateGame: 'Rate this game:',
@@ -448,6 +488,10 @@
                     appId: 'App ID:',
                     metacritic: 'Metacritic:',
                     steamReviews: 'Steam Reviews:',
+                    playingThrough: 'Playing Through:',
+                    howToRunInstructions: 'How to Run Instructions',
+                    close: 'Close',
+                    instructionsNotAvailable: 'Instructions not available for this game.',
                     screenshots: 'Screenshots',
                     aboutGame: 'ABOUT THIS GAME',
                     coopFeatures: 'Co-Op Features',
@@ -508,6 +552,7 @@
                     // Actions
                     search: 'Rechercher des jeux...',
                     searchOnline: 'Rechercher sur online-fix.me',
+                    howToRun: 'Comment Exécuter',
                     openSteam: 'Ouvrir dans Steam',
                     downloadFix: 'Télécharger le Fix',
                     rateGame: 'Notez ce jeu:',
@@ -552,6 +597,10 @@
                     appId: 'ID de l\'App:',
                     metacritic: 'Metacritic:',
                     steamReviews: 'Avis Steam:',
+                    playingThrough: 'Jouer Via:',
+                    howToRunInstructions: 'Instructions d\'Exécution',
+                    close: 'Fermer',
+                    instructionsNotAvailable: 'Instructions non disponibles pour ce jeu.',
                     screenshots: 'Captures d\'écran',
                     aboutGame: 'À PROPOS DE CE JEU',
                     coopFeatures: 'Fonctionnalités Co-Op',
@@ -1187,9 +1236,10 @@
                         setSteamData(cachedSteam);
                         setSteamLoading(false);
 
-                        // Still fetch Co-Op data if we have the game name
+                        // Still fetch Co-Op data and Online-Fix data if we have the game name
                         if (cachedSteam.name) {
                             fetchCoopData(cachedSteam.name);
+                            fetchOnlineFixData(cachedSteam.name);
                         }
                         return;
                     } else if (cachedSteam) {
@@ -1254,10 +1304,11 @@
                             )
                         );
                         
-                        // Fetch Co-Op data after getting game name
+                        // Fetch Co-Op data and Online-Fix data after getting game name
                         if (gameData.name) {
                             console.log('Triggering co-op fetch for:', gameData.name);
                             fetchCoopData(gameData.name);
+                            fetchOnlineFixData(gameData.name);
                         }
                     } else {
                         throw new Error('Game not found');
@@ -1372,10 +1423,237 @@
                 }
             };
 
+            // Fetch Online-Fix.me data (Playing Through + How to Run)
+            const fetchOnlineFixData = async (gameName) => {
+                if (!gameName) {
+                    console.log('❌ No game name provided for online-fix fetch');
+                    return;
+                }
+
+                try {
+                    console.log('🔍 Fetching online-fix.me data for:', gameName);
+
+                    // Search for the game on online-fix.me
+                    const searchUrl = `https://online-fix.me/index.php?do=search&subaction=search&story=${encodeURIComponent(gameName)}`;
+                    console.log('🔗 Search URL:', searchUrl);
+
+                    let html = '';
+                    if (window.electronAPI && window.electronAPI.fetchRemoteFile) {
+                        console.log('📡 Using Electron API to fetch...');
+                        html = await window.electronAPI.fetchRemoteFile(searchUrl);
+                    } else {
+                        console.log('🌐 Using fetch API...');
+                        const response = await fetch(searchUrl);
+                        html = await response.text();
+                    }
+
+                    console.log('📄 HTML received, length:', html.length);
+
+                    if (!html || html.length < 100) {
+                        console.log('❌ HTML too short or empty');
+                        setOnlineFixData(null);
+                        return null;
+                    }
+
+                    // Parse HTML to find the game page link
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Try multiple selectors to find game links
+                    const selectors = [
+                        '.story__title a',
+                        '.story-title a',
+                        '.short-story-title a',
+                        '.news-title a',
+                        '.short-title a',
+                        'h2 a',
+                        'h3 a',
+                        'article a',
+                        '.item-title a'
+                    ];
+
+                    let gameLink = null;
+                    for (const selector of selectors) {
+                        gameLink = doc.querySelector(selector);
+                        if (gameLink) {
+                            console.log('✅ Found link with selector:', selector);
+                            break;
+                        }
+                    }
+
+                    if (!gameLink) {
+                        console.log('❌ No game page link found. Trying to find any link...');
+                        const allLinks = doc.querySelectorAll('a[href*="games"]');
+                        console.log('Found', allLinks.length, 'links with "games" in href');
+                        if (allLinks.length > 0) {
+                            gameLink = allLinks[0];
+                            console.log('Using first games link:', gameLink.href);
+                        } else {
+                            console.log('No suitable links found');
+                            setOnlineFixData(null);
+                            return null;
+                        }
+                    }
+
+                    let gamePageUrl = gameLink.href;
+                    if (!gamePageUrl.startsWith('http')) {
+                        gamePageUrl = `https://online-fix.me${gameLink.getAttribute('href')}`;
+                    }
+
+                    console.log('🎮 Game page URL:', gamePageUrl);
+
+                    // Fetch the actual game page
+                    let gameHtml = '';
+                    if (window.electronAPI && window.electronAPI.fetchRemoteFile) {
+                        gameHtml = await window.electronAPI.fetchRemoteFile(gamePageUrl);
+                    } else {
+                        const response = await fetch(gamePageUrl);
+                        gameHtml = await response.text();
+                    }
+
+                    console.log('📄 Game page HTML received, length:', gameHtml.length);
+
+                    const gameDoc = parser.parseFromString(gameHtml, 'text/html');
+
+                    // Extract "Playing Through" (Играем через)
+                    let playingThrough = '';
+                    const allText = gameDoc.body.textContent;
+
+                    // Try multiple patterns
+                    const playingPatterns = [
+                        /Играем через[:\s]*([^\n.]+)/i,
+                        /Playing through[:\s]*([^\n.]+)/i,
+                        /Играем через:?\s*([^<\n]+)/i
+                    ];
+
+                    for (const pattern of playingPatterns) {
+                        const match = allText.match(pattern);
+                        if (match) {
+                            playingThrough = match[1].trim();
+                            console.log('✅ Found "Playing Through":', playingThrough);
+                            break;
+                        }
+                    }
+
+                    if (!playingThrough) {
+                        console.log('❌ "Playing Through" not found');
+                    }
+
+                    // Extract "How to Run" instructions (Как запустить)
+                    const instructions = [];
+
+                    // Try to find the section with multiple approaches
+                    const howToPatterns = [
+                        /Как запустить[:\s]*/i,
+                        /How to run[:\s]*/i,
+                        /Запуск игры[:\s]*/i
+                    ];
+
+                    let howToStartIndex = -1;
+                    let matchedPattern = null;
+
+                    for (const pattern of howToPatterns) {
+                        const match = gameHtml.match(pattern);
+                        if (match) {
+                            howToStartIndex = match.index;
+                            matchedPattern = pattern;
+                            console.log('✅ Found "How to Run" section at index:', howToStartIndex);
+                            break;
+                        }
+                    }
+
+                    if (howToStartIndex !== -1) {
+                        // Extract a larger fragment around the match
+                        const fragment = gameHtml.slice(howToStartIndex, howToStartIndex + 8000);
+                        const fragmentDoc = parser.parseFromString('<div>' + fragment + '</div>', 'text/html');
+
+                        // Try to find ordered/unordered lists
+                        const lists = fragmentDoc.querySelectorAll('ol, ul');
+                        console.log('Found', lists.length, 'lists in fragment');
+
+                        if (lists.length > 0) {
+                            // Get the first list (most likely the instructions)
+                            const firstList = lists[0];
+                            const listItems = firstList.querySelectorAll('li');
+                            console.log('Found', listItems.length, 'list items');
+
+                            listItems.forEach((li, idx) => {
+                                const text = li.textContent.trim();
+                                if (text && text.length > 5) {
+                                    instructions.push(text);
+                                    console.log(`  ${idx + 1}. ${text.substring(0, 50)}...`);
+                                }
+                            });
+                        } else {
+                            // Try to find numbered items in paragraphs
+                            console.log('No lists found, trying to find numbered paragraphs...');
+                            const textLines = fragment.split(/\n|<br>/i);
+                            textLines.forEach(line => {
+                                const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+                                if (/^\d+[\.)]\s/.test(cleanLine) && cleanLine.length > 10) {
+                                    instructions.push(cleanLine);
+                                    console.log('  Found:', cleanLine.substring(0, 50) + '...');
+                                }
+                            });
+                        }
+                    } else {
+                        console.log('❌ "How to Run" section not found');
+                    }
+
+                    const result = {
+                        playingThrough: playingThrough || null,
+                        instructions: instructions.length > 0 ? instructions : null,
+                        gamePageUrl: gamePageUrl
+                    };
+
+                    console.log('📊 Final result:', {
+                        hasPlayingThrough: !!result.playingThrough,
+                        instructionsCount: result.instructions?.length || 0,
+                        url: result.gamePageUrl
+                    });
+
+                    setOnlineFixData(result);
+                    return result;
+
+                } catch (error) {
+                    console.error('❌ Error fetching online-fix data:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    setOnlineFixData(null);
+                    return null;
+                }
+            };
+
+            // Simple translation function for Russian to current language
+            const translateRussianText = (text, toLang) => {
+                if (!text || !toLang) return text;
+
+                // Basic translation dictionary for common terms
+                const translations = {
+                    'Steam': { en: 'Steam', fr: 'Steam' },
+                    'Epic Games': { en: 'Epic Games', fr: 'Epic Games' },
+                    'Epic Games Store': { en: 'Epic Games Store', fr: 'Epic Games Store' },
+                    'аккаунт': { en: 'account', fr: 'compte' },
+                    'Установите': { en: 'Install', fr: 'Installez' },
+                    'Запустите': { en: 'Launch', fr: 'Lancez' },
+                    'Войдите': { en: 'Log in', fr: 'Connectez-vous' },
+                    'игру': { en: 'game', fr: 'jeu' },
+                    'через': { en: 'via', fr: 'via' }
+                };
+
+                let translated = text;
+                for (const [rus, trans] of Object.entries(translations)) {
+                    const regex = new RegExp(rus, 'gi');
+                    translated = translated.replace(regex, trans[toLang] || rus);
+                }
+
+                return translated;
+            };
+
             const handleGameClick = (game) => {
                 setSelectedGame(game);
                 setCurrentView('game');
                 setCoopData(null);
+                setOnlineFixData(null);
                 fetchSteamData(game.appID);
                 setVideoPlaying(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1500,7 +1778,14 @@
                 if (selectedTag === 'DOWNLOADED_FILTER') {
                     return downloadHistory.some(d => d.appID === game.appID) && matchesSearch;
                 }
-                
+
+                // NEW: Filter for newly added games
+                if (selectedTag === 'NEW_GAMES_FILTER') {
+                    // Show the last N games where N = newGamesCount
+                    const gameIndex = games.indexOf(game);
+                    return gameIndex >= (games.length - newGamesCount) && matchesSearch;
+                }
+
                 // Advanced filter: Rating
                 const gameRating = ratings[game.appID] || 0;
                 const matchesRating = gameRating >= advancedFilters.minRating && gameRating <= advancedFilters.maxRating;
@@ -1640,9 +1925,25 @@
                 );
             }
 
+            // Get proper image path for dev and production
+            const getImagePath = (filename) => {
+                // In Electron app, images are in the same directory as index.html
+                // In dev mode (browser), they're relative
+                return filename;
+            };
+
+            // Get wallpaper based on current theme
+            const getWallpaperImage = () => {
+                if (darkMode) {
+                    return getImagePath('online fix store wallpaper.png');
+                } else {
+                    return getImagePath('wallpaper online fix store blanc.png');
+                }
+            };
+
             return (
                 <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`} style={showWallpaper ? {
-                    backgroundImage: 'url("online fix store wallpaper.png")',
+                    backgroundImage: `url("${getWallpaperImage()}")`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundAttachment: 'fixed'
@@ -1651,7 +1952,7 @@
                         <div className={`w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-r fixed h-full overflow-y-auto`}>
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-8">
-                                    <img src="logo online fix store.png" alt="Online Fix Store" className="h-36 object-contain" />
+                                    <img src={getImagePath('logo online fix store.png')} alt="Online Fix Store" className="h-36 object-contain" />
                                     <button onClick={() => setLeftSidebarOpen(false)} className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-2 rounded transition`}>
                                         <ChevronLeft />
                                     </button>
@@ -1781,9 +2082,14 @@
                                         <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
                                             <h3 className="text-2xl font-semibold mb-4">🖼️ Background Wallpaper</h3>
                                             <div className="flex items-center justify-between">
-                                                <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                    Show background wallpaper
-                                                </span>
+                                                <div>
+                                                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block`}>
+                                                        Show background wallpaper
+                                                    </span>
+                                                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                        Auto-switches based on theme
+                                                    </span>
+                                                </div>
                                                 <button
                                                     onClick={() => setShowWallpaper(!showWallpaper)}
                                                     className={`relative inline-flex h-8 w-16 items-center rounded-full transition ${
@@ -1797,6 +2103,41 @@
                                                     />
                                                 </button>
                                             </div>
+                                        </div>
+
+                                        {/* Background Music Toggle */}
+                                        <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                            <h3 className="text-2xl font-semibold mb-4">🎵 Background Music</h3>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block`}>
+                                                        Play background music
+                                                    </span>
+                                                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                        Starts after loading completes
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() => setBackgroundMusicEnabled(!backgroundMusicEnabled)}
+                                                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition ${
+                                                        backgroundMusicEnabled ? 'bg-blue-600' : 'bg-gray-400'
+                                                    }`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition ${
+                                                            backgroundMusicEnabled ? 'translate-x-9' : 'translate-x-1'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            </div>
+                                            {backgroundMusicEnabled && !loading && (
+                                                <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                    Music is playing
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Language Selection */}
@@ -2285,7 +2626,7 @@
                                     )}
                                     
                                     {rightSidebarOpen && (
-                                        <div className={`w-72 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-l p-6 overflow-y-auto custom-scrollbar`} style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
+                                        <div className={`w-72 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-l p-6 overflow-y-auto custom-scrollbar rounded-l-3xl`} style={{ maxHeight: '100vh', paddingBottom: '2rem' }}>
                                             
                                             {/* Active Filters Display */}
                                             {(selectedTag || selectedGenre) && (
@@ -2299,7 +2640,7 @@
                                                             {t('clearAll')}
                                                         </button>
                                                     </div>
-                                                    {selectedTag && selectedTag !== 'LATEST_GAMES_FILTER' && selectedTag !== 'FAVORITES_FILTER' && selectedTag !== 'DOWNLOADED_FILTER' && (
+                                                    {selectedTag && selectedTag !== 'LATEST_GAMES_FILTER' && selectedTag !== 'FAVORITES_FILTER' && selectedTag !== 'DOWNLOADED_FILTER' && selectedTag !== 'NEW_GAMES_FILTER' && (
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <span className="text-xs">Tag:</span>
                                                             <span className="px-2 py-1 bg-cyan-600 text-white rounded text-xs">{selectedTag}</span>
@@ -2395,6 +2736,33 @@
                                                     )}
                                                 </div>
                                             </details>
+
+                                            {/* New Games Section */}
+                                            {newGamesCount > 0 && (
+                                                <div className={`mb-6 p-4 rounded-xl ${darkMode ? 'bg-gradient-to-br from-green-600 to-green-700' : 'bg-gradient-to-br from-green-500 to-green-600'} cursor-pointer hover:opacity-90 transition`}
+                                                    onClick={() => {
+                                                        setSelectedTag('NEW_GAMES_FILTER');
+                                                        setSelectedGenre(null);
+                                                        setSelectedTags([]);
+                                                        setSelectedGenres([]);
+                                                    }}
+                                                >
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                                            ✨ New Games
+                                                        </h3>
+                                                        {selectedTag === 'NEW_GAMES_FILTER' && (
+                                                            <span className="text-white text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Active</span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-white text-sm opacity-90">
+                                                        {newGamesCount} new game{newGamesCount > 1 ? 's' : ''} added!
+                                                    </p>
+                                                    <p className="text-white text-xs opacity-75 mt-1">
+                                                        Click to view the latest additions
+                                                    </p>
+                                                </div>
+                                            )}
 
                                             {/* Sort Options */}
                                             <details className="mb-6">
@@ -2519,6 +2887,16 @@
                                                             </div>
                                                         )}
                                                     </div>
+
+                                                    {/* Playing Through Information */}
+                                                    {onlineFixData && onlineFixData.playingThrough && (
+                                                        <div className="flex items-center gap-2 mt-4">
+                                                            <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('playingThrough')}</span>
+                                                            <span className="px-3 py-1 rounded bg-purple-600 text-white font-bold">
+                                                                {translateRussianText(onlineFixData.playingThrough, language)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <button onClick={() => toggleFavorite(selectedGame.appID)} className="text-pink-500 hover:text-pink-600 ml-4">
                                                     <Heart filled={favorites.includes(selectedGame.appID)} />
@@ -2747,20 +3125,11 @@
                                                     {t('openSteam')}
                                                 </a>
                                                 <button
-                                                    onClick={() => {
-                                                        // Use correct search URL format for online-fix.me
-                                                        const gameName = steamData.name || `Game ${selectedGame.appID}`;
-                                                        const searchUrl = `https://online-fix.me/index.php?do=search&subaction=search&story=${encodeURIComponent(gameName)}`;
-                                                        if (window.electronAPI) {
-                                                            window.electronAPI.openExternal(searchUrl);
-                                                        } else {
-                                                            window.open(searchUrl, '_blank');
-                                                        }
-                                                    }}
+                                                    onClick={() => setShowHowToRunModal(true)}
                                                     style={{backgroundColor: 'var(--accent-secondary)'}}
                                                     className="w-full hover:opacity-80 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition"
                                                 >
-                                                    🔍 {t('searchOnline')}
+                                                    📖 {t('howToRun')}
                                                 </button>
                                             </div>
 
@@ -2779,6 +3148,64 @@
                                     <X />
                                 </button>
                                 <img src={lightboxImage} alt="Full size screenshot" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+                            </div>
+                        )}
+
+                        {/* How to Run Modal */}
+                        {showHowToRunModal && (
+                            <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onClick={() => setShowHowToRunModal(false)}>
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+                                    <div className={`sticky top-0 ${darkMode ? 'bg-gray-800' : 'bg-white'} z-10 p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
+                                        <h2 className="text-3xl font-bold">{t('howToRunInstructions')}</h2>
+                                        <button onClick={() => setShowHowToRunModal(false)} className="text-gray-500 hover:text-gray-700 transition">
+                                            <X />
+                                        </button>
+                                    </div>
+                                    <div className="p-6">
+                                        {onlineFixData && onlineFixData.instructions && onlineFixData.instructions.length > 0 ? (
+                                            <ol className="space-y-4">
+                                                {onlineFixData.instructions.map((instruction, idx) => (
+                                                    <li key={idx} className={`flex gap-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <div className="flex-1 pt-1">
+                                                            <p className="leading-relaxed">{translateRussianText(instruction, language)}</p>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        ) : (
+                                            <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg text-center`}>
+                                                <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                                    {t('instructionsNotAvailable')}
+                                                </p>
+                                                {onlineFixData && onlineFixData.gamePageUrl && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.electronAPI) {
+                                                                window.electronAPI.openExternal(onlineFixData.gamePageUrl);
+                                                            } else {
+                                                                window.open(onlineFixData.gamePageUrl, '_blank');
+                                                            }
+                                                        }}
+                                                        className="mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                                                    >
+                                                        🔗 {t('searchOnline')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className={`sticky bottom-0 ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-end`}>
+                                        <button
+                                            onClick={() => setShowHowToRunModal(false)}
+                                            className={`px-6 py-3 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} rounded-lg transition font-semibold`}
+                                        >
+                                            {t('close')}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 

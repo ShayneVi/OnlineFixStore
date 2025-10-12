@@ -280,6 +280,7 @@
         const Book = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>;
         const Bell = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>;
         const Palette = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>;
+        const Settings = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m9.66-10L16 12l5.66 3M2.34 9L8 12l-5.66 3m14.24-10.24L12 9.88l4.58 4.58m-9.16 0L12 9.88 7.42 14.46"></path></svg>;
 
         const GameFixStore = () => {
             const [games, setGames] = useState([]);
@@ -356,6 +357,30 @@
             useEffect(() => {
                 localStorage.setItem('onlineFixStore_showWallpaper', JSON.stringify(showWallpaper));
             }, [showWallpaper]);
+
+            // Window Mode Settings
+            const [windowMode, setWindowMode] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('onlineFixStore_windowMode');
+                    return saved || 'window';
+                } catch { return 'window'; }
+            });
+
+            useEffect(() => {
+                localStorage.setItem('onlineFixStore_windowMode', windowMode);
+                // Try to apply window mode immediately if electronAPI is available
+                if (window.electronAPI) {
+                    if (window.electronAPI.setWindowMode) {
+                        window.electronAPI.setWindowMode(windowMode);
+                    }
+                    // Also try alternate method names
+                    if (window.electronAPI.setFullscreen && windowMode === 'fullscreen') {
+                        window.electronAPI.setFullscreen(true);
+                    } else if (window.electronAPI.setFullscreen && windowMode !== 'fullscreen') {
+                        window.electronAPI.setFullscreen(false);
+                    }
+                }
+            }, [windowMode]);
 
             // Language System
             const [language, setLanguage] = useState(() => {
@@ -577,6 +602,20 @@
             };
 
             const t = (key) => translations[language][key] || translations.en[key] || key;
+
+            // Function to get Steam rating description based on review percentage
+            const getSteamRatingDescription = (recommendations) => {
+                if (!recommendations || !recommendations.total) return null;
+
+                const percentage = (recommendations.positive / recommendations.total) * 100;
+
+                if (percentage >= 95) return { text: 'Overwhelmingly Positive', color: 'bg-blue-600' };
+                if (percentage >= 80) return { text: 'Very Positive', color: 'bg-blue-500' };
+                if (percentage >= 70) return { text: 'Positive', color: 'bg-green-600' };
+                if (percentage >= 40) return { text: 'Mixed', color: 'bg-yellow-600' };
+                if (percentage >= 20) return { text: 'Negative', color: 'bg-orange-600' };
+                return { text: 'Overwhelmingly Negative', color: 'bg-red-600' };
+            };
 
             useEffect(() => {
                 localStorage.setItem('onlineFixStore_language', language);
@@ -1028,7 +1067,7 @@
                             genres: gameData.genres || [],
                             hasSplitScreen: hasSplitScreen,
                             metacritic: gameData.metacritic || null,
-                            recommendations: gameData.recommendations?.total || null
+                            recommendations: gameData.recommendations || null
                         };
                         steamCache[appID] = gameInfo;
 
@@ -1141,12 +1180,20 @@
                     setSteamData(null);
                     setCoopData(null);
 
-                    // Try to get from cache first
+                    // Try to get from cache first - but verify it has the full data structure
                     const cachedSteam = getCachedSteamData(appID);
-                    if (cachedSteam) {
+                    if (cachedSteam && cachedSteam.recommendations !== undefined && cachedSteam.metacritic !== undefined) {
+                        console.log('Using cached Steam data for', appID);
                         setSteamData(cachedSteam);
                         setSteamLoading(false);
+
+                        // Still fetch Co-Op data if we have the game name
+                        if (cachedSteam.name) {
+                            fetchCoopData(cachedSteam.name);
+                        }
                         return;
+                    } else if (cachedSteam) {
+                        console.log('Cache exists but missing data, refetching for', appID);
                     }
 
                     const apiUrl = window.electronAPI
@@ -1163,9 +1210,14 @@
 
                     if (data[appID] && data[appID].success) {
                         const gameData = data[appID].data;
-                        console.log('Steam API Response for', appID, ':', gameData);
+                        console.log('=== Steam API Response for', appID, '===');
+                        console.log('Full game data:', gameData);
                         console.log('Metacritic data:', gameData.metacritic);
                         console.log('Recommendations data:', gameData.recommendations);
+                        console.log('Recommendations structure:', {
+                            total: gameData.recommendations?.total,
+                            positive: gameData.recommendations?.positive || gameData.recommendations?.up
+                        });
 
                         const steamDataObj = {
                             name: gameData.name || `Game ${appID}`,
@@ -1185,7 +1237,10 @@
                             release_date: gameData.release_date || {},
                             platforms: gameData.platforms || {},
                             metacritic: gameData.metacritic || null,
-                            recommendations: gameData.recommendations?.total || null
+                            recommendations: gameData.recommendations ? {
+                                total: gameData.recommendations.total,
+                                positive: gameData.recommendations.positive || gameData.recommendations.up || 0
+                            } : null
                         };
                         console.log('Processed steamDataObj:', steamDataObj);
                         setSteamData(steamDataObj);
@@ -1229,72 +1284,89 @@
             };
 
             const fetchCoopData = async (gameName) => {
-                if (!gameName) return;
-                
+                if (!gameName) {
+                    console.log('No game name provided for Co-Op fetch');
+                    return;
+                }
+
                 setCoopLoading(true);
                 setCoopData(null);
-                
+
                 try {
-                    console.log('Fetching co-op data for:', gameName);
-                    
+                    console.log('=== Fetching Co-Op data for:', gameName, '===');
+
                     // Try manual database first
                     try {
-                        const dbUrl = window.electronAPI 
+                        const dbUrl = window.electronAPI
                             ? `${VERCEL_BASE_URL}/coopData.json`
                             : '/coopData.json';
-                        
+
+                        console.log('Trying manual DB at:', dbUrl);
                         const manualResponse = await fetch(dbUrl);
+
                         if (manualResponse.ok) {
                             const manualData = await manualResponse.json();
+                            console.log('Manual DB loaded, checking for:', gameName);
+                            console.log('Available games in DB:', Object.keys(manualData.games || {}).slice(0, 5));
+
                             if (manualData.games && manualData.games[gameName]) {
-                                console.log('Found in manual DB');
+                                console.log('✓ Found Co-Op data in manual DB!');
                                 setCoopData(manualData.games[gameName]);
                                 setCoopLoading(false);
                                 return;
+                            } else {
+                                console.log('Game not found in manual DB');
                             }
+                        } else {
+                            console.log('Manual DB not available, status:', manualResponse.status);
                         }
                     } catch (e) {
-                        console.log('Manual DB not available');
+                        console.log('Manual DB error:', e.message);
                     }
-                    
-                    // Try API - ALWAYS use Vercel URL for Electron
-                    console.log('Trying API...');
+
+                    // Try API
+                    console.log('Trying Co-Op API...');
                     const searchQuery = encodeURIComponent(gameName);
-                    const apiUrl = window.electronAPI 
+                    const apiUrl = window.electronAPI
                         ? `${VERCEL_BASE_URL}/api/coop?name=${searchQuery}`
                         : `/api/coop?name=${searchQuery}`;
-                    
-                    console.log('API URL:', apiUrl);
-                    
-                    const response = await fetch(apiUrl);
-                    console.log('API status:', response.status);
-                    
+
+                    console.log('Co-Op API URL:', apiUrl);
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                    const response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    console.log('Co-Op API status:', response.status);
+
                     if (response.ok) {
                         const data = await response.json();
                         console.log('Co-Op API Response:', data);
-                        console.log('Co-Op data type:', typeof data);
-                        console.log('Co-Op data keys:', Object.keys(data || {}));
+                        console.log('Co-Op data has properties:', Object.keys(data || {}).join(', '));
 
-                        // Check if data is valid
-                        if (data && Object.keys(data).length > 0) {
+                        // Check if data is valid and has co-op properties
+                        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            console.log('✓ Co-Op data received from API!');
                             setCoopData(data);
                         } else {
-                            console.log('Co-Op API returned empty data');
+                            console.log('✗ Co-Op API returned empty or invalid data');
                             setCoopData(null);
                         }
                     } else {
-                        console.log('Co-Op API failed with status:', response.status);
-                        const errorText = await response.text();
-                        console.log('Error response:', errorText);
+                        console.log('✗ Co-Op API failed with status:', response.status);
+                        try {
+                            const errorText = await response.text();
+                            console.log('Error response:', errorText);
+                        } catch (e) {
+                            console.log('Could not read error response');
+                        }
                         setCoopData(null);
                     }
                 } catch (error) {
-                    console.error('Co-op fetch error:', error);
-                    // Set coopData to null only if we truly have no data
-                    // This prevents the error from blocking the UI
-                    if (!coopData) {
-                        setCoopData(null);
-                    }
+                    console.error('✗ Co-op fetch error:', error.message);
+                    setCoopData(null);
                 } finally {
                     setCoopLoading(false);
                 }
@@ -1585,54 +1657,6 @@
                                     </button>
                                 </div>
                                 
-                                <button onClick={() => setShowThemeSelector(!showThemeSelector)} style={{backgroundColor: 'var(--bg-tertiary)'}} className="w-full flex items-center gap-3 px-4 py-3 rounded transition mb-2 hover:opacity-80">
-                                    <Palette />
-                                    Themes {themes[currentTheme].icon}
-                                </button>
-
-                                {showThemeSelector && (
-                                    <div style={{backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)'}} className="mb-4 p-2 rounded-lg border">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {Object.entries(themes).map(([key, theme]) => (
-                                                <button
-                                                    key={key}
-                                                    onClick={() => {
-                                                        setCurrentTheme(key);
-                                                        setShowThemeSelector(false);
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: currentTheme === key ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                                                        color: 'var(--text-primary)'
-                                                    }}
-                                                    className="flex flex-col items-center gap-1 p-3 rounded transition hover:opacity-80"
-                                                >
-                                                    <span className="text-2xl">{theme.icon}</span>
-                                                    <span className="text-xs font-semibold">{theme.name}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Wallpaper Toggle */}
-                                <button onClick={() => setShowWallpaper(!showWallpaper)} style={{backgroundColor: 'var(--bg-tertiary)'}} className="w-full flex items-center gap-3 px-4 py-3 rounded transition mb-2 hover:opacity-80">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    Background: {showWallpaper ? 'On' : 'Off'}
-                                </button>
-
-                                {/* Language Selector */}
-                                <button onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')} style={{backgroundColor: 'var(--bg-tertiary)'}} className="w-full flex items-center gap-3 px-4 py-3 rounded transition mb-2 hover:opacity-80">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                                    </svg>
-                                    {t('language')} {language === 'en' ? '🇺🇸' : '🇫🇷'}
-                                </button>
 
                                 {/* Update Notifications */}
                                 {notifications.length > 0 && (
@@ -1683,7 +1707,11 @@
                                     <button onClick={() => setShowGuide(true)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
                                         <Book /> {t('installationGuide')}
                                     </button>
-                                    
+
+                                    <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'settings' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <Settings /> Settings
+                                    </button>
+
                                     <button onClick={() => setCurrentView('contact')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'contact' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
                                         <Mail /> Contact
                                     </button>
@@ -1713,6 +1741,148 @@
                                         {homeContent.split('\n').map((line, idx) => (
                                             <p key={idx} className={line.trim() === '' ? 'h-4' : 'mb-2'}>{line}</p>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentView === 'settings' && (
+                            <div className="p-8 max-w-4xl mx-auto">
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
+                                    <h2 className="text-4xl font-bold mb-6">⚙️ Settings</h2>
+
+                                    <div className="space-y-6">
+                                        {/* Themes Section */}
+                                        <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                            <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                                                <Palette />
+                                                Theme
+                                            </h3>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                {Object.entries(themes).map(([key, theme]) => (
+                                                    <button
+                                                        key={key}
+                                                        onClick={() => setCurrentTheme(key)}
+                                                        style={{
+                                                            backgroundColor: currentTheme === key ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                                                            color: 'var(--text-primary)'
+                                                        }}
+                                                        className="flex flex-col items-center gap-2 p-4 rounded-lg transition hover:opacity-80 border-2"
+                                                    >
+                                                        <span className="text-3xl">{theme.icon}</span>
+                                                        <span className="text-sm font-semibold">{theme.name}</span>
+                                                        {currentTheme === key && <span className="text-xs">✓ Active</span>}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Background Wallpaper Toggle */}
+                                        <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                            <h3 className="text-2xl font-semibold mb-4">🖼️ Background Wallpaper</h3>
+                                            <div className="flex items-center justify-between">
+                                                <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                    Show background wallpaper
+                                                </span>
+                                                <button
+                                                    onClick={() => setShowWallpaper(!showWallpaper)}
+                                                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition ${
+                                                        showWallpaper ? 'bg-blue-600' : 'bg-gray-400'
+                                                    }`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition ${
+                                                            showWallpaper ? 'translate-x-9' : 'translate-x-1'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Language Selection */}
+                                        <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                            <h3 className="text-2xl font-semibold mb-4">🌐 Language</h3>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => setLanguage('en')}
+                                                    className={`flex-1 p-4 rounded-lg font-semibold transition ${
+                                                        language === 'en'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                    }`}
+                                                >
+                                                    🇺🇸 English
+                                                </button>
+                                                <button
+                                                    onClick={() => setLanguage('fr')}
+                                                    className={`flex-1 p-4 rounded-lg font-semibold transition ${
+                                                        language === 'fr'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                    }`}
+                                                >
+                                                    🇫🇷 Français
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Window Mode Selection (Electron only) */}
+                                        {window.electronAPI && (
+                                            <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
+                                                <h3 className="text-2xl font-semibold mb-4">🖥️ Window Mode</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    <button
+                                                        onClick={() => setWindowMode('window')}
+                                                        className={`p-4 rounded-lg font-semibold transition ${
+                                                            windowMode === 'window'
+                                                                ? 'bg-blue-600 text-white'
+                                                                : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                        }`}
+                                                    >
+                                                        <div className="text-2xl mb-2">🪟</div>
+                                                        Window
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setWindowMode('fullscreen')}
+                                                        className={`p-4 rounded-lg font-semibold transition ${
+                                                            windowMode === 'fullscreen'
+                                                                ? 'bg-blue-600 text-white'
+                                                                : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                        }`}
+                                                    >
+                                                        <div className="text-2xl mb-2">⛶</div>
+                                                        Fullscreen
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setWindowMode('borderless')}
+                                                        className={`p-4 rounded-lg font-semibold transition ${
+                                                            windowMode === 'borderless'
+                                                                ? 'bg-blue-600 text-white'
+                                                                : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                        }`}
+                                                    >
+                                                        <div className="text-2xl mb-2">▭</div>
+                                                        Borderless
+                                                    </button>
+                                                </div>
+                                                <div className="mt-4 flex items-center justify-between">
+                                                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                        Having issues? Try restarting the app
+                                                    </p>
+                                                    {window.electronAPI && window.electronAPI.restartApp && (
+                                                        <button
+                                                            onClick={() => window.electronAPI.restartApp()}
+                                                            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
+                                                        >
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                                                            </svg>
+                                                            Restart App
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2332,11 +2502,19 @@
                                                                 </a>
                                                             </div>
                                                         )}
-                                                        {steamData.recommendations && (
+                                                        {steamData.recommendations && steamData.recommendations.total && (
                                                             <div className="flex items-center gap-2">
                                                                 <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('steamReviews')}</span>
-                                                                <span className="px-3 py-1 rounded bg-blue-600 text-white font-bold">
-                                                                    {steamData.recommendations.toLocaleString()}
+                                                                {(() => {
+                                                                    const rating = getSteamRatingDescription(steamData.recommendations);
+                                                                    return rating ? (
+                                                                        <span className={`px-3 py-1 rounded ${rating.color} text-white font-bold`}>
+                                                                            {rating.text}
+                                                                        </span>
+                                                                    ) : null;
+                                                                })()}
+                                                                <span className="px-3 py-1 rounded bg-gray-600 text-white font-bold">
+                                                                    {steamData.recommendations.total.toLocaleString()}
                                                                 </span>
                                                             </div>
                                                         )}

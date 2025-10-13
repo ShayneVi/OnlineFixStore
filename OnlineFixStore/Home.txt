@@ -18,9 +18,19 @@ if you want free games the easy way. Their tool and plugin are
 a great addition to anyone and goes well with this store.
 https://discord.gg/uDphxkJV6V
 
----INFO---
+-----METACRITIC SCORE-----
+Not all games have metacritic user scores.
+
+-----CO-OPTIMUS INFO-----
+Only the first 100 games are done properly for now. The rest defaults on 4 players.
+Not all games have co-op info on co-optimus. If there is a game that doesn't have the right info, please do message me in contact with info on the coop of the game in this format.
+Game Name
+Max Number of Players - online - local - Campaign mode
+
+-----INSTALLATION----
 When you download a fix, it will instantly install it. Select your game folder.
 
+---INFO---
 Right now there is 700+ games. I am adding more every week, until
 all the games in online-fix.me are there.
 There may be some exceptions as I upload these fixes to my github and

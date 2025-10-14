@@ -22,7 +22,6 @@ https://discord.gg/uDphxkJV6V
 Not all games have metacritic user scores.
 
 -----CO-OPTIMUS INFO-----
-Only the first 100 games are done properly for now. The rest defaults on 4 players.
 Not all games have co-op info on co-optimus. If there is a game that doesn't have the right info, please do message me in contact with info on the coop of the game in this format.
 Game Name
 Max Number of Players - online - local - Campaign mode

@@ -653,10 +653,51 @@
             const t = (key) => translations[language][key] || translations.en[key] || key;
 
             // Function to get Steam rating description based on review percentage
-            const getSteamRatingDescription = (recommendations) => {
-                if (!recommendations || !recommendations.total) return null;
+            const getSteamRatingDescription = (recommendations, reviewScoreDesc = null) => {
+                if (!recommendations || !recommendations.total || recommendations.total === 0) {
+                    console.log('❌ No recommendations data or total is 0:', recommendations);
+                    return null;
+                }
 
-                const percentage = (recommendations.positive / recommendations.total) * 100;
+                console.log('📊 Steam recommendations:', recommendations);
+
+                // PRIORITY 1: Use review_score_desc from Steam API if available
+                if (reviewScoreDesc) {
+                    console.log('✅ Using Steam review_score_desc:', reviewScoreDesc);
+
+                    // Map Steam's review_score_desc to colors
+                    const ratingMap = {
+                        'Overwhelmingly Positive': { text: 'Overwhelmingly Positive', color: 'bg-blue-600' },
+                        'Very Positive': { text: 'Very Positive', color: 'bg-blue-500' },
+                        'Positive': { text: 'Positive', color: 'bg-green-600' },
+                        'Mostly Positive': { text: 'Mostly Positive', color: 'bg-green-500' },
+                        'Mixed': { text: 'Mixed', color: 'bg-yellow-600' },
+                        'Mostly Negative': { text: 'Mostly Negative', color: 'bg-orange-500' },
+                        'Negative': { text: 'Negative', color: 'bg-orange-600' },
+                        'Very Negative': { text: 'Very Negative', color: 'bg-red-500' },
+                        'Overwhelmingly Negative': { text: 'Overwhelmingly Negative', color: 'bg-red-600' }
+                    };
+
+                    return ratingMap[reviewScoreDesc] || { text: reviewScoreDesc, color: 'bg-gray-600' };
+                }
+
+                // FALLBACK: Calculate from positive/negative ratio if available
+                const positiveCount = recommendations.positive ?? recommendations.up ?? 0;
+
+                // If positive count is 0 or undefined, we can't calculate
+                if (positiveCount === 0 || positiveCount === undefined) {
+                    console.log('⚠️ Steam API does not provide positive/negative breakdown and no review_score_desc. Hiding rating description.');
+                    return null;
+                }
+
+                // Ensure we have valid numbers
+                if (typeof positiveCount !== 'number' || typeof recommendations.total !== 'number') {
+                    console.log('❌ Invalid number types');
+                    return null;
+                }
+
+                const percentage = (positiveCount / recommendations.total) * 100;
+                console.log('📈 Calculated percentage:', percentage.toFixed(2) + '%');
 
                 if (percentage >= 95) return { text: 'Overwhelmingly Positive', color: 'bg-blue-600' };
                 if (percentage >= 80) return { text: 'Very Positive', color: 'bg-blue-500' };
@@ -682,7 +723,6 @@
             // Legacy darkMode for backward compatibility
             const darkMode = currentTheme !== 'light';
             const [showStats, setShowStats] = useState(false);
-            const [showGuide, setShowGuide] = useState(false);
             const [newGamesCount, setNewGamesCount] = useState(0);
             const [coopData, setCoopData] = useState(null);
             const [coopLoading, setCoopLoading] = useState(false);
@@ -707,7 +747,7 @@
             const GAMES_PER_PAGE = 30;
             const VERCEL_BASE_URL = 'https://online-fix-store.vercel.app';
             const steamCache = {};
-            const CACHE_VERSION = 'v1';
+            const CACHE_VERSION = 'v2'; // Bumped to force refresh of Steam recommendations data
             const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
             // Local caching system for game data
@@ -1264,6 +1304,8 @@
                         console.log('Full game data:', gameData);
                         console.log('Metacritic data:', gameData.metacritic);
                         console.log('Recommendations data:', gameData.recommendations);
+                        console.log('Review score:', gameData.review_score);
+                        console.log('Review score desc:', gameData.review_score_desc);
                         console.log('Recommendations structure:', {
                             total: gameData.recommendations?.total,
                             positive: gameData.recommendations?.positive || gameData.recommendations?.up
@@ -1287,6 +1329,8 @@
                             release_date: gameData.release_date || {},
                             platforms: gameData.platforms || {},
                             metacritic: gameData.metacritic || null,
+                            review_score: gameData.review_score || null,
+                            review_score_desc: gameData.review_score_desc || null,
                             recommendations: gameData.recommendations ? {
                                 total: gameData.recommendations.total,
                                 positive: gameData.recommendations.positive || gameData.recommendations.up || 0
@@ -1442,9 +1486,9 @@
                         console.log('📡 Using Electron API to fetch...');
                         html = await window.electronAPI.fetchRemoteFile(searchUrl);
                     } else {
-                        console.log('🌐 Using fetch API...');
-                        const response = await fetch(searchUrl);
-                        html = await response.text();
+                        console.log('❌ Electron API not available. Online-fix.me fetching only works in Electron app due to CORS restrictions.');
+                        setOnlineFixData(null);
+                        return null;
                     }
 
                     console.log('📄 HTML received, length:', html.length);
@@ -1482,14 +1526,30 @@
                     }
 
                     if (!gameLink) {
-                        console.log('❌ No game page link found. Trying to find any link...');
+                        console.log('❌ No game page link found with standard selectors');
+
+                        // Try to find any link with "games" in href
                         const allLinks = doc.querySelectorAll('a[href*="games"]');
                         console.log('Found', allLinks.length, 'links with "games" in href');
+
                         if (allLinks.length > 0) {
-                            gameLink = allLinks[0];
-                            console.log('Using first games link:', gameLink.href);
-                        } else {
-                            console.log('No suitable links found');
+                            // Filter links that look like game pages (contain numbers)
+                            const gameLinks = Array.from(allLinks).filter(link => {
+                                const href = link.getAttribute('href') || '';
+                                return /games\/[^\/]+\/\d+/.test(href);
+                            });
+
+                            if (gameLinks.length > 0) {
+                                gameLink = gameLinks[0];
+                                console.log('✅ Using filtered game link:', gameLink.getAttribute('href'));
+                            } else if (allLinks.length > 0) {
+                                gameLink = allLinks[0];
+                                console.log('⚠️ Using first games link:', gameLink.getAttribute('href'));
+                            }
+                        }
+
+                        if (!gameLink) {
+                            console.log('❌ No suitable game links found');
                             setOnlineFixData(null);
                             return null;
                         }
@@ -1507,29 +1567,39 @@
                     if (window.electronAPI && window.electronAPI.fetchRemoteFile) {
                         gameHtml = await window.electronAPI.fetchRemoteFile(gamePageUrl);
                     } else {
-                        const response = await fetch(gamePageUrl);
-                        gameHtml = await response.text();
+                        console.log('❌ Cannot fetch game page without Electron API');
+                        setOnlineFixData(null);
+                        return null;
                     }
 
                     console.log('📄 Game page HTML received, length:', gameHtml.length);
 
                     const gameDoc = parser.parseFromString(gameHtml, 'text/html');
 
-                    // Extract "Playing Through" (Играем через)
+                    // Extract "Playing Through" (Игра через)
                     let playingThrough = '';
                     const allText = gameDoc.body.textContent;
 
-                    // Try multiple patterns
+                    // Try multiple patterns - looking for "Игра через:" or "Играем через:"
+                    // Match only until the first period, newline, or "Страница"
                     const playingPatterns = [
-                        /Играем через[:\s]*([^\n.]+)/i,
-                        /Playing through[:\s]*([^\n.]+)/i,
-                        /Играем через:?\s*([^<\n]+)/i
+                        /Игра через[:\s]+([^.\n]+?)(?:\.|\n|Страница|$)/i,
+                        /Играем через[:\s]+([^.\n]+?)(?:\.|\n|Страница|$)/i,
+                        /Playing through[:\s]+([^.\n]+?)(?:\.|\n|Page|$)/i
                     ];
 
                     for (const pattern of playingPatterns) {
                         const match = allText.match(pattern);
                         if (match) {
                             playingThrough = match[1].trim();
+
+                            // Clean up - only keep platform names (Steam, Epic Games, Microsoft, etc.)
+                            // Stop at any non-platform text
+                            const platformMatch = playingThrough.match(/^([^А-Яа-я]*(?:Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net)(?:\s*\+\s*(?:Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net))*)/i);
+                            if (platformMatch) {
+                                playingThrough = platformMatch[1].trim();
+                            }
+
                             console.log('✅ Found "Playing Through":', playingThrough);
                             break;
                         }
@@ -1537,67 +1607,181 @@
 
                     if (!playingThrough) {
                         console.log('❌ "Playing Through" not found');
+                        console.log('Sample text from page:', allText.substring(0, 500));
                     }
 
-                    // Extract "How to Run" instructions (Как запустить)
+                    // Extract "How to Run" instructions (Как запустить / Как запускать / How to run)
                     const instructions = [];
 
                     // Try to find the section with multiple approaches
                     const howToPatterns = [
+                        /Как запускать[:\s]*/i,
                         /Как запустить[:\s]*/i,
                         /How to run[:\s]*/i,
                         /Запуск игры[:\s]*/i
                     ];
 
                     let howToStartIndex = -1;
-                    let matchedPattern = null;
 
+                    // First try to find in plain text
                     for (const pattern of howToPatterns) {
-                        const match = gameHtml.match(pattern);
+                        const match = allText.match(pattern);
                         if (match) {
-                            howToStartIndex = match.index;
-                            matchedPattern = pattern;
-                            console.log('✅ Found "How to Run" section at index:', howToStartIndex);
-                            break;
+                            console.log('✅ Found "How to Run" header in text:', match[0]);
+
+                            // Get text after the header - but limit it to avoid grabbing comments/code sections
+                            const afterHeader = allText.substring(allText.indexOf(match[0]) + match[0].length);
+
+                            // Find the end of the instructions section
+                            // Look for common section headers that indicate end of instructions
+                            // NOTE: "В игре:", "Подключение:", "Создание сервера:" are PART of instructions, not enders
+                            const sectionEnders = [
+                                'Информация о сетевых режимах',
+                                'Примечания:',
+                                'Файлы для игры',
+                                'Скачать',
+                                'Комментарии',
+                                'Похожие игры',
+                                'Обновления',
+                                'Версия игры'
+                            ];
+
+                            // Find the earliest section ender
+                            let endIndex = afterHeader.length;
+                            for (const ender of sectionEnders) {
+                                const idx = afterHeader.indexOf(ender);
+                                if (idx !== -1 && idx < endIndex) {
+                                    endIndex = idx;
+                                }
+                            }
+
+                            // Only extract from the "How to Run" section
+                            let instructionText = afterHeader.substring(0, endIndex);
+                            console.log('Instruction text length:', instructionText.length);
+
+                            // Clean up the text - remove extra whitespace but preserve structure
+                            instructionText = instructionText.replace(/\s+/g, ' ').trim();
+
+                            // IMPORTANT: Normalize numbered items - add newline before numbers to ensure proper splitting
+                            // This fixes "1. Text2. Text" becoming two separate items
+                            instructionText = instructionText.replace(/(\d+[\.)]\s)/g, '\n$1');
+
+                            // Now split by newlines to get individual items
+                            const lines = instructionText.split('\n').filter(l => l.trim().length > 0);
+
+                            console.log(`Found ${lines.length} lines in instructions`);
+
+                            // Track which sections we've seen to avoid duplicates
+                            const seenSections = new Set();
+
+                            lines.forEach((line, idx) => {
+                                line = line.trim();
+                                if (line.length > 5) {
+                                    // Check if it's a section header (В игре:, Подключение:, Создание сервера:)
+                                    const sectionMatch = line.match(/^(В игре|Подключение|Создание сервера)[:]/i);
+
+                                    if (sectionMatch) {
+                                        const sectionName = sectionMatch[1];
+
+                                        // Only add if we haven't seen this section yet
+                                        if (!seenSections.has(sectionName)) {
+                                            seenSections.add(sectionName);
+                                            instructions.push(line);
+                                            console.log(`  ${instructions.length}. [Section] ${line.substring(0, 60)}...`);
+                                        }
+                                    } else if (/^\d+[\.)]\s/.test(line)) {
+                                        // It's a numbered instruction
+                                        let cleaned = line.replace(/^\d+[\.)]\s+/, '').trim();
+
+                                        // Only keep reasonable length instructions
+                                        if (cleaned.length > 10 && cleaned.length < 1000 && !cleaned.includes('function') && !cleaned.includes('DLEalert') && !cleaned.includes('{')) {
+                                            instructions.push(cleaned);
+                                            console.log(`  ${instructions.length}. ${cleaned.substring(0, 60)}...`);
+                                        }
+                                    }
+                                }
+                            });
+
+                            if (instructions.length === 0) {
+                                // Fallback: Split by lines
+                                console.log('Falling back to line-by-line parsing');
+                                const lines = afterHeader.split('\n');
+                                let foundInstructions = false;
+
+                                for (let i = 0; i < lines.length && i < 50; i++) {
+                                    const line = lines[i].trim();
+
+                                    // Match lines that start with "1.", "2.", etc. or "1)", "2)", etc.
+                                    if (/^\d+[\.)]\s+.+/.test(line)) {
+                                        // Remove the number prefix and clean up
+                                        let cleanedLine = line.replace(/^\d+[\.)]\s+/, '').trim();
+
+                                        // Remove everything after certain stop patterns
+                                        cleanedLine = cleanedLine.split(/В игре:|Подключение:|Создание сервера:|Информация о|Примечания:|Файлы для/i)[0].trim();
+
+                                        if (cleanedLine.length > 3 && cleanedLine.length < 500) {
+                                            instructions.push(cleanedLine);
+                                            console.log(`  ${instructions.length}. ${cleanedLine.substring(0, 60)}...`);
+                                            foundInstructions = true;
+                                        }
+                                    }
+                                    // Stop at these section headers
+                                    else if (foundInstructions && /^(В игре|Подключение|Создание сервера|Информация о|Примечания|Файлы для)/i.test(line)) {
+                                        console.log('  Stopping at section:', line.substring(0, 30));
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (instructions.length > 0) {
+                                console.log(`✅ Found ${instructions.length} instructions via text parsing`);
+                                break;
+                            }
                         }
                     }
 
-                    if (howToStartIndex !== -1) {
-                        // Extract a larger fragment around the match
-                        const fragment = gameHtml.slice(howToStartIndex, howToStartIndex + 8000);
-                        const fragmentDoc = parser.parseFromString('<div>' + fragment + '</div>', 'text/html');
+                    // Fallback: Try HTML parsing
+                    if (instructions.length === 0) {
+                        console.log('Trying HTML-based extraction...');
 
-                        // Try to find ordered/unordered lists
-                        const lists = fragmentDoc.querySelectorAll('ol, ul');
-                        console.log('Found', lists.length, 'lists in fragment');
+                        for (const pattern of howToPatterns) {
+                            const match = gameHtml.match(pattern);
+                            if (match) {
+                                howToStartIndex = match.index;
+                                console.log('✅ Found "How to Run" in HTML at index:', howToStartIndex);
 
-                        if (lists.length > 0) {
-                            // Get the first list (most likely the instructions)
-                            const firstList = lists[0];
-                            const listItems = firstList.querySelectorAll('li');
-                            console.log('Found', listItems.length, 'list items');
+                                const fragment = gameHtml.slice(howToStartIndex, howToStartIndex + 10000);
+                                const fragmentDoc = parser.parseFromString('<div>' + fragment + '</div>', 'text/html');
 
-                            listItems.forEach((li, idx) => {
-                                const text = li.textContent.trim();
-                                if (text && text.length > 5) {
-                                    instructions.push(text);
-                                    console.log(`  ${idx + 1}. ${text.substring(0, 50)}...`);
+                                // Try to find ordered/unordered lists
+                                const lists = fragmentDoc.querySelectorAll('ol, ul');
+                                console.log('Found', lists.length, 'lists in fragment');
+
+                                if (lists.length > 0) {
+                                    const firstList = lists[0];
+                                    const listItems = firstList.querySelectorAll('li');
+                                    console.log('Found', listItems.length, 'list items');
+
+                                    listItems.forEach((li, idx) => {
+                                        const text = li.textContent.trim();
+                                        if (text && text.length > 5) {
+                                            instructions.push(text);
+                                            console.log(`  ${idx + 1}. ${text.substring(0, 50)}...`);
+                                        }
+                                    });
                                 }
-                            });
-                        } else {
-                            // Try to find numbered items in paragraphs
-                            console.log('No lists found, trying to find numbered paragraphs...');
-                            const textLines = fragment.split(/\n|<br>/i);
-                            textLines.forEach(line => {
-                                const cleanLine = line.replace(/<[^>]*>/g, '').trim();
-                                if (/^\d+[\.)]\s/.test(cleanLine) && cleanLine.length > 10) {
-                                    instructions.push(cleanLine);
-                                    console.log('  Found:', cleanLine.substring(0, 50) + '...');
+
+                                if (instructions.length > 0) {
+                                    break;
                                 }
-                            });
+                            }
                         }
+                    }
+
+                    if (instructions.length === 0) {
+                        console.log('❌ "How to Run" instructions not found');
                     } else {
-                        console.log('❌ "How to Run" section not found');
+                        console.log(`✅ Extracted ${instructions.length} instructions`);
                     }
 
                     const result = {
@@ -1625,27 +1809,135 @@
 
             // Simple translation function for Russian to current language
             const translateRussianText = (text, toLang) => {
-                if (!text || !toLang) return text;
+                if (!text || !toLang) {
+                    console.log('⚠️ Translation called with missing params:', { text: !!text, toLang });
+                    return text;
+                }
 
-                // Basic translation dictionary for common terms
+                console.log('🔤 Translating:', text.substring(0, 60) + '...', 'to', toLang);
+
+                // For simple platform names, no translation needed
+                if (/^(Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net|\+|\s)+$/i.test(text)) {
+                    return text;
+                }
+
+                // Comprehensive translation dictionary for common terms
+                // IMPORTANT: Longer phrases MUST come first to avoid partial replacements causing double words
                 const translations = {
+                    // Platforms (keep as-is)
                     'Steam': { en: 'Steam', fr: 'Steam' },
-                    'Epic Games': { en: 'Epic Games', fr: 'Epic Games' },
                     'Epic Games Store': { en: 'Epic Games Store', fr: 'Epic Games Store' },
-                    'аккаунт': { en: 'account', fr: 'compte' },
-                    'Установите': { en: 'Install', fr: 'Installez' },
+                    'Epic Games': { en: 'Epic Games', fr: 'Epic Games' },
+                    'Microsoft': { en: 'Microsoft', fr: 'Microsoft' },
+
+                    // Multi-word phrases (MUST come before individual words to prevent double translation)
+                    'приглашение от друга': { en: 'invitation from a friend', fr: 'invitation d\'un ami' },
+                    'Принимаем приглашение от друга': { en: 'Accept invitation from a friend', fr: 'Accepter l\'invitation d\'un ami' },
+                    'заходим в свой профиль': { en: 'go to your profile', fr: 'allons à votre profil' },
+                    'в свой профиль': { en: 'to your profile', fr: 'à votre profil' },
+                    'в любую папку': { en: 'to any folder', fr: 'dans n\'importe quel dossier' },
+                    'ожидаем их подключения': { en: 'wait for their connection', fr: 'attendons leur connexion' },
+                    'в открывшемся окне браузера': { en: 'in the opened browser window', fr: 'dans la fenêtre du navigateur ouverte' },
+                    'предоставляем доступ': { en: 'grant access', fr: 'accordons l\'accès' },
+                    'к любому серверу': { en: 'to any server', fr: 'à n\'importe quel serveur' },
+                    'в папке с игрой': { en: 'in the game folder', fr: 'dans le dossier du jeu' },
+                    'Подключаемся к': { en: 'Connect to', fr: 'Connectons-nous à' },
+
+                    // Verbs
+                    'Запускаем': { en: 'Launch', fr: 'Lançons' },
                     'Запустите': { en: 'Launch', fr: 'Lancez' },
-                    'Войдите': { en: 'Log in', fr: 'Connectez-vous' },
-                    'игру': { en: 'game', fr: 'jeu' },
-                    'через': { en: 'via', fr: 'via' }
+                    'Запустить': { en: 'Launch', fr: 'Lancer' },
+                    'Установите': { en: 'Install', fr: 'Installez' },
+                    'Войдите': { en: 'Log in to', fr: 'Connectez-vous à' },
+                    'Заходим': { en: 'Go', fr: 'Allons' },
+                    'заходим': { en: 'go', fr: 'allons' },
+                    'Принимаем': { en: 'Accept', fr: 'Acceptons' },
+                    'Создание': { en: 'Creating', fr: 'Création' },
+                    'Приглашаем': { en: 'Invite', fr: 'Invitons' },
+                    'ожидаем': { en: 'wait for', fr: 'attendons' },
+                    'Скачиваем': { en: 'Download', fr: 'Téléchargez' },
+                    'распаковываем': { en: 'extract', fr: 'extrayez' },
+                    'Подключаемся': { en: 'Connect', fr: 'Connectons-nous' },
+                    'предоставляем': { en: 'grant', fr: 'accordons' },
+                    'расположен': { en: 'located', fr: 'situé' },
+                    'открывшемся': { en: 'opened', fr: 'ouvert' },
+                    'Проходим': { en: 'Complete', fr: 'Complétons' },
+                    'Загружаем': { en: 'Load', fr: 'Chargeons' },
+
+                    // Nouns
+                    'игру': { en: 'the game', fr: 'le jeu' },
+                    'игры': { en: 'game', fr: 'jeu' },
+                    'игрой': { en: 'game', fr: 'jeu' },
+                    'game': { en: 'game', fr: 'jeu' },
+                    'via': { en: 'via', fr: 'via' },
+                    'профиль': { en: 'profile', fr: 'profil' },
+                    'аккаунт': { en: 'account', fr: 'compte' },
+                    'приглашение': { en: 'invitation', fr: 'invitation' },
+                    'друга': { en: 'a friend', fr: 'un ami' },
+                    'друзей': { en: 'friends', fr: 'amis' },
+                    'другие': { en: 'other', fr: 'autres' },
+                    'сервера': { en: 'server', fr: 'serveur' },
+                    'серверу': { en: 'server', fr: 'serveur' },
+                    'подключения': { en: 'connection', fr: 'connexion' },
+                    'папку': { en: 'folder', fr: 'dossier' },
+                    'папке': { en: 'folder', fr: 'dossier' },
+                    'файлы': { en: 'files', fr: 'fichiers' },
+                    'браузера': { en: 'browser', fr: 'navigateur' },
+                    'окне': { en: 'window', fr: 'fenêtre' },
+                    'доступ': { en: 'access', fr: 'accès' },
+                    'который': { en: 'which', fr: 'qui' },
+                    'игроков': { en: 'players', fr: 'joueurs' },
+                    'обучение': { en: 'tutorial', fr: 'tutoriel' },
+                    'сохранение': { en: 'save', fr: 'sauvegarde' },
+                    'моё': { en: 'my', fr: 'mon' },
+                    'своё': { en: 'your', fr: 'votre' },
+
+                    // Prepositions & conjunctions
+                    'через': { en: 'via', fr: 'via' },
+                    'от': { en: 'from', fr: 'de' },
+                    'и': { en: 'and', fr: 'et' },
+                    'или': { en: 'or', fr: 'ou' },
+                    'для': { en: 'for', fr: 'pour' },
+                    'на': { en: 'on', fr: 'sur' },
+                    'в': { en: 'in', fr: 'dans' },
+                    'к': { en: 'to', fr: 'à' },
+                    'с': { en: 'with', fr: 'avec' },
+                    'нему': { en: 'it', fr: 'lui' },
+
+                    // Common words
+                    'свой': { en: 'your', fr: 'votre' },
+                    'их': { en: 'their', fr: 'leur' },
+                    'любую': { en: 'any', fr: 'n\'importe quel' },
+
+                    // Game-specific
+                    'В игре': { en: 'In-game', fr: 'Dans le jeu' },
+                    'Подключение': { en: 'Connection', fr: 'Connexion' },
+                    'Мультиплеер': { en: 'Multiplayer', fr: 'Multijoueur' },
+                    'Создание сервера': { en: 'Creating server', fr: 'Création de serveur' }
                 };
 
                 let translated = text;
-                for (const [rus, trans] of Object.entries(translations)) {
-                    const regex = new RegExp(rus, 'gi');
+
+                // Sort by length (longest first) to avoid partial replacements
+                const sortedEntries = Object.entries(translations).sort((a, b) => b[0].length - a[0].length);
+
+                let replacements = 0;
+                for (const [rus, trans] of sortedEntries) {
+                    // For Cyrillic, word boundaries don't work well, so use lookahead/behind
+                    const escapedRus = rus.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapedRus, 'gi');
+
+                    const before = translated;
                     translated = translated.replace(regex, trans[toLang] || rus);
+
+                    if (before !== translated) {
+                        replacements++;
+                        console.log(`  ✓ Replaced "${rus}" with "${trans[toLang]}"`);
+                    }
                 }
 
+                console.log(`✅ Translation complete: ${replacements} replacements made`);
+                console.log('   Result:', translated.substring(0, 80) + '...');
                 return translated;
             };
 
@@ -1682,28 +1974,71 @@
                     // Check if file exists
                     const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
 
-                    if (headResponse.ok) {
-                        // Show notification immediately
+                    if (!headResponse.ok) {
+                        // File doesn't exist
+                        alert(`Fix file not available yet for ${game.name}.\n\nYou can search for fixes on Co-Optimus or online-fix.me`);
+                        window.open(`https://www.google.com/search?q=${encodeURIComponent(game.name + ' online fix')}`, '_blank');
+                        return;
+                    }
+
+                    // Check if Electron API is available for automatic extraction
+                    if (window.electronAPI && window.electronAPI.selectFolder && window.electronAPI.downloadAndExtractFix) {
+                        // Show notification
+                        addNotification(`Preparing to download ${game.name}...`, 'info');
+
+                        // Ask user to select folder
+                        const selectedFolder = await window.electronAPI.selectFolder();
+
+                        if (!selectedFolder) {
+                            console.log('User canceled folder selection');
+                            return;
+                        }
+
+                        console.log('Selected folder:', selectedFolder);
+                        addNotification(`Downloading and extracting ${game.name}...`, 'info');
+
+                        // Download and extract
+                        const result = await window.electronAPI.downloadAndExtractFix(
+                            downloadUrl,
+                            selectedFolder,
+                            game.appID,
+                            downloadFileName
+                        );
+
+                        if (result.success) {
+                            // Add to download history
+                            const downloadEntry = {
+                                appID: game.appID,
+                                name: game.name,
+                                timestamp: Date.now()
+                            };
+                            setDownloadHistory(prev => {
+                                const filtered = prev.filter(d => d.appID !== game.appID);
+                                return [downloadEntry, ...filtered].slice(0, 50);
+                            });
+
+                            addNotification(`Successfully extracted ${game.name} to ${selectedFolder}`, 'success');
+                        } else {
+                            throw new Error(result.error || 'Unknown error during extraction');
+                        }
+                    } else {
+                        // Fallback to regular download (browser mode)
                         addNotification(`Downloading ${game.name}...`, 'info');
 
-                        // Fetch the file as blob to ensure proper renaming
                         const response = await fetch(downloadUrl);
                         const blob = await response.blob();
 
-                        // Create download link with blob URL
                         const blobUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = blobUrl;
-                        link.download = downloadFileName; // This will work with blob URLs
+                        link.download = downloadFileName;
                         link.style.display = 'none';
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
 
-                        // Clean up blob URL after download
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
 
-                        // Add to download history
                         const downloadEntry = {
                             appID: game.appID,
                             name: game.name,
@@ -1715,14 +2050,10 @@
                         });
 
                         addNotification(`Downloaded ${game.name}`, 'success');
-                    } else {
-                        // File doesn't exist
-                        alert(`Fix file not available yet for ${game.name}.\n\nYou can search for fixes on Co-Optimus or online-fix.me`);
-                        window.open(`https://www.google.com/search?q=${encodeURIComponent(game.name + ' online fix')}`, '_blank');
                     }
                 } catch (error) {
                     console.error('Download error:', error);
-                    alert(`Unable to download fix for ${game.name}.\n\nPlease check your internet connection or search for fixes manually.`);
+                    alert(`Unable to download fix for ${game.name}.\n\nError: ${error.message}\n\nPlease check your internet connection or search for fixes manually.`);
                 }
             };
 
@@ -2003,10 +2334,6 @@
 
                                     <button onClick={() => setShowStats(true)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
                                         <BarChart /> {t('statistics')}
-                                    </button>
-
-                                    <button onClick={() => setShowGuide(true)} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
-                                        <Book /> {t('installationGuide')}
                                     </button>
 
                                     <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'settings' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
@@ -2467,22 +2794,19 @@
                                                                     </button>
                                                                 </div>
                                                                 <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>ID: {game.appID}</p>
+                                                                {game.metacritic && game.metacritic.score && (
+                                                                    <div className="mt-1 flex items-center gap-1">
+                                                                        <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{backgroundColor: game.metacritic.score >= 75 ? '#66cc33' : game.metacritic.score >= 50 ? '#ffcc33' : '#ff6666', color: 'white'}}>
+                                                                            {game.metacritic.score}
+                                                                        </span>
+                                                                        <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>MC</span>
+                                                                    </div>
+                                                                )}
                                                                 {ratings[game.appID] && (
                                                                     <div className="flex gap-0.5 mt-1">
                                                                         {[1, 2, 3, 4, 5].map(star => (
                                                                             <Star key={star} filled={star <= ratings[game.appID]} />
                                                                         ))}
-                                                                    </div>
-                                                                )}
-                                                                {game.metacritic && (
-                                                                    <div className="mt-1">
-                                                                        <span className={`text-xs px-2 py-0.5 rounded font-bold text-white ${
-                                                                            game.metacritic.score >= 75 ? 'bg-green-600' :
-                                                                            game.metacritic.score >= 50 ? 'bg-yellow-600' :
-                                                                            'bg-red-600'
-                                                                        }`}>
-                                                                            MC {game.metacritic.score}
-                                                                        </span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -2507,21 +2831,20 @@
                                                                 <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>{!game.name.startsWith('Game ') ? game.name : `Game ${game.appID}`}</h3>
                                                                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>App ID: {game.appID}</p>
                                                                 <div className="flex items-center gap-3 mt-1">
+                                                                    {game.metacritic && game.metacritic.score && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span className="text-sm font-bold px-2 py-1 rounded" style={{backgroundColor: game.metacritic.score >= 75 ? '#66cc33' : game.metacritic.score >= 50 ? '#ffcc33' : '#ff6666', color: 'white'}}>
+                                                                                {game.metacritic.score}
+                                                                            </span>
+                                                                            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Metacritic</span>
+                                                                        </div>
+                                                                    )}
                                                                     {ratings[game.appID] && (
                                                                         <div className="flex gap-1">
                                                                             {[1, 2, 3, 4, 5].map(star => (
                                                                                 <Star key={star} filled={star <= ratings[game.appID]} />
                                                                             ))}
                                                                         </div>
-                                                                    )}
-                                                                    {game.metacritic && (
-                                                                        <span className={`text-xs px-2 py-1 rounded font-bold text-white ${
-                                                                            game.metacritic.score >= 75 ? 'bg-green-600' :
-                                                                            game.metacritic.score >= 50 ? 'bg-yellow-600' :
-                                                                            'bg-red-600'
-                                                                        }`}>
-                                                                            Metacritic {game.metacritic.score}
-                                                                        </span>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -2567,7 +2890,17 @@
                                                                     </button>
                                                                 </div>
                                                                 <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>App ID: {game.appID}</p>
-                                                                
+
+                                                                {/* Metacritic Score */}
+                                                                {game.metacritic && game.metacritic.score && (
+                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                        <span className="text-sm font-bold px-2 py-1 rounded" style={{backgroundColor: game.metacritic.score >= 75 ? '#66cc33' : game.metacritic.score >= 50 ? '#ffcc33' : '#ff6666', color: 'white'}}>
+                                                                            {game.metacritic.score}
+                                                                        </span>
+                                                                        <span className={`text-sm font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Metacritic Score</span>
+                                                                    </div>
+                                                                )}
+
                                                                 {/* Co-Op Info */}
                                                                 {game.coopData && (
                                                                     <div className="mb-2 flex flex-wrap gap-1">
@@ -2588,7 +2921,7 @@
                                                                         )}
                                                                     </div>
                                                                 )}
-                                                                
+
                                                                 {ratings[game.appID] && (
                                                                     <div className="flex gap-1">
                                                                         {[1, 2, 3, 4, 5].map(star => (
@@ -2849,43 +3182,6 @@
                                                             </button>
                                                         ))}
                                                         {ratings[selectedGame.appID] && <span className="text-sm ml-2">({ratings[selectedGame.appID]}/5) - {t('clickToRemove')}</span>}
-                                                    </div>
-
-                                                    {/* Metacritic and Steam Ratings */}
-                                                    <div className="flex items-center gap-4 mt-4">
-                                                        {steamData.metacritic && (
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('metacritic')}</span>
-                                                                <a
-                                                                    href={steamData.metacritic.url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className={`px-3 py-1 rounded font-bold text-white ${
-                                                                        steamData.metacritic.score >= 75 ? 'bg-green-600' :
-                                                                        steamData.metacritic.score >= 50 ? 'bg-yellow-600' :
-                                                                        'bg-red-600'
-                                                                    } hover:opacity-80 transition`}
-                                                                >
-                                                                    {steamData.metacritic.score}
-                                                                </a>
-                                                            </div>
-                                                        )}
-                                                        {steamData.recommendations && steamData.recommendations.total && (
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('steamReviews')}</span>
-                                                                {(() => {
-                                                                    const rating = getSteamRatingDescription(steamData.recommendations);
-                                                                    return rating ? (
-                                                                        <span className={`px-3 py-1 rounded ${rating.color} text-white font-bold`}>
-                                                                            {rating.text}
-                                                                        </span>
-                                                                    ) : null;
-                                                                })()}
-                                                                <span className="px-3 py-1 rounded bg-gray-600 text-white font-bold">
-                                                                    {steamData.recommendations.total.toLocaleString()}
-                                                                </span>
-                                                            </div>
-                                                        )}
                                                     </div>
 
                                                     {/* Playing Through Information */}
@@ -3239,35 +3535,6 @@
                             </div>
                         )}
 
-                        {showGuide && (
-                            <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setShowGuide(false)}>
-                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-3xl font-bold">{t('installationGuideTitle')}</h2>
-                                        <button onClick={() => setShowGuide(false)}><X /></button>
-                                    </div>
-
-                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} space-y-4`}>
-                                        <div>
-                                            <h3 className="text-xl font-semibold mb-2">{t('step1Title')}</h3>
-                                            <p>{t('step1Desc')}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-semibold mb-2">{t('step2Title')}</h3>
-                                            <p>{t('step2Desc')}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-semibold mb-2">{t('step3Title')}</h3>
-                                            <p>{t('step3Desc')}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-semibold mb-2">{t('step4Title')}</h3>
-                                            <p>{t('step4Desc')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             );

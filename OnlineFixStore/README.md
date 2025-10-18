@@ -19,7 +19,7 @@ This desktop application provides an easy-to-use interface for accessing online 
 - **Dark Mode & Themes** - 11 beautiful themes to choose from
 - **Advanced Filtering** - Browse by tags, genres, player count, and more
 - **Favorites & History** - Keep track of your downloads and favorite games
-- **Game Bypasses** - Access Ubisoft game bypasses from GitHub releases
+- **Game Bypasses** - Access Ubisoft and other game bypasses from GitHub releases
 - **Useful Tools** - Integration with helpful plugins and apps
 
 ## Themes
@@ -59,6 +59,8 @@ Co-Op data comes from Co-Optimus. If a game has incorrect or missing co-op info,
 
 ### Installation
 When you download a fix, it will automatically install. Just select your game folder when prompted.
+For bypasses, you download the folder, extract it and copy its content to your game's folder. 
+Some may have more to do, make sure to read the read me text that comes with it.
 
 ### Game Availability
 Currently features **700+ games** with more added weekly. Some games may be missing due to:

@@ -51,11 +51,37 @@ export default async function handler(req, res) {
         // Merge tags into Steam data
         if (steamData[appid] && steamData[appid].success) {
             steamData[appid].data.user_tags = tags;
+
+            // If Metacritic score is missing, try to fetch from RAWG as fallback
+            if (!steamData[appid].data.metacritic && steamData[appid].data.name) {
+                try {
+                    const gameName = steamData[appid].data.name;
+                    const rawgResponse = await fetch(
+                        `https://api.rawg.io/api/games?search=${encodeURIComponent(gameName)}&page_size=3`
+                    );
+
+                    if (rawgResponse.ok) {
+                        const rawgData = await rawgResponse.json();
+                        if (rawgData.results && rawgData.results.length > 0) {
+                            const game = rawgData.results[0];
+                            if (game.metacritic) {
+                                steamData[appid].data.metacritic = {
+                                    score: game.metacritic,
+                                    url: `https://www.metacritic.com/game/${game.slug || ''}`
+                                };
+                                console.log(`✓ Added Metacritic score from RAWG for ${gameName}: ${game.metacritic}`);
+                            }
+                        }
+                    }
+                } catch (rawgError) {
+                    console.log('Could not fetch Metacritic from RAWG:', rawgError);
+                }
+            }
         }
-        
+
         // Cache the response for 24 hours
         res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
-        
+
         return res.status(200).json(steamData);
     } catch (error) {
         console.error('Error fetching Steam data:', error);

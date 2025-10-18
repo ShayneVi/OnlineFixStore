@@ -324,6 +324,110 @@
                     return saved ? JSON.parse(saved) : {};
                 } catch { return {}; }
             });
+
+            // Game Bypasses data - dynamically fetched from GitHub releases
+            const [bypassGames, setBypassGames] = useState([]);
+            const [bypassGamesLoading, setBypassGamesLoading] = useState(true);
+            const [selectedBypassGame, setSelectedBypassGame] = useState(null);
+
+            // Useful Apps & Plugins
+            const [selectedPlugin, setSelectedPlugin] = useState(null);
+            const usefulApps = [
+                {
+                    id: 'onlinefix-plugin',
+                    name: 'OnlineFix Plugin',
+                    type: 'plugin',
+                    repo: 'ShayneVi/OnlineFix-Plugin',
+                    description: 'A Steam Millennium plugin that enables one-click installation of online multiplayer fixes for over 1,000 games. Automates downloading, extracting, and installing fixes directly into game directories with Windows notifications.',
+                    installPath: 'C:\\Program Files (x86)\\Steam\\plugins'
+                },
+                {
+                    id: 'ludusavi-restore',
+                    name: 'LudusaviRestore Plugin',
+                    type: 'plugin',
+                    repo: 'ShayneVi/LudusaviRestore-Plugin',
+                    description: 'Millennium plugin that adds a "RESTORE" button to Steam game pages for one-click game save restoration. Integrates Ludusavi to automatically restore backed-up saves to their proper locations with status notifications.',
+                    installPath: 'C:\\Program Files (x86)\\Steam\\plugins'
+                },
+                {
+                    id: 'steam-save-monitor',
+                    name: 'Steam Save Monitor',
+                    type: 'app',
+                    repo: 'ShayneVi/Steam-Save-Monitor',
+                    description: 'Desktop application that automatically backs up game saves using Ludusavi. Features dual monitoring through Steam API and process detection, triggering backups when gaming sessions end.',
+                    installPath: null // User selects where to save
+                }
+            ];
+
+            // Fetch bypass games from GitHub releases
+            useEffect(() => {
+                const fetchBypassGames = async () => {
+                    try {
+                        setBypassGamesLoading(true);
+
+                        // Fetch with pagination support (100 items per page)
+                        const response = await fetch('https://api.github.com/repos/ShayneVi/Bypasses/releases/latest?per_page=100');
+                        const data = await response.json();
+
+                        console.log('GitHub API response:', data);
+                        console.log('Total assets:', data.assets?.length);
+
+                        if (data.assets && Array.isArray(data.assets)) {
+                            const games = data.assets
+                                .filter(asset => asset.name.endsWith('.zip'))
+                                .map((asset, index) => {
+                                    // Convert filename to readable name
+                                    // Example: "A.Plague.Tale.Innocence.zip" -> "A Plague Tale: Innocence"
+                                    let name = asset.name.replace('.zip', '').replace(/\./g, ' ');
+
+                                    // Handle special cases for better formatting
+                                    name = name
+                                        .replace(/\bII\b/g, 'II')
+                                        .replace(/\bIII\b/g, 'III')
+                                        .replace(/\bIV\b/g, 'IV')
+                                        .replace(/\bV\b/g, 'V')
+                                        .replace(/\bVI\b/g, 'VI')
+                                        .replace(/Assassin s Creed/g, "Assassin's Creed")
+                                        .replace(/Tom Clancy s/g, "Tom Clancy's")
+                                        .replace(/Watch Dogs/g, "Watch Dogs")
+                                        .replace(/Far Cry/g, "Far Cry")
+                                        .replace(/Rainbow Six/g, "Rainbow Six")
+                                        .replace(/Ghost Recon/g, "Ghost Recon")
+                                        .replace(/The Division/g, "The Division")
+                                        .replace(/The Crew/g, "The Crew")
+                                        .replace(/Star Wars/g, "Star Wars")
+                                        .replace(/Plague Tale/g, "Plague Tale")
+                                        .replace(/Bypass$/gi, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+
+                                    return {
+                                        // Use filename as unique ID to avoid collisions
+                                        id: asset.name.replace('.zip', ''),
+                                        name: name,
+                                        filename: asset.name,
+                                        size: asset.size,
+                                        downloadCount: asset.download_count || 0
+                                    };
+                                })
+                                .sort((a, b) => a.name.localeCompare(b.name));
+
+                            setBypassGames(games);
+                            console.log(`✅ Loaded ${games.length} bypass games from GitHub`);
+                            console.log('First 3 games:', games.slice(0, 3).map(g => g.name));
+                        }
+                    } catch (error) {
+                        console.error('❌ Error fetching bypass games from GitHub:', error);
+                        // Fallback to empty array
+                        setBypassGames([]);
+                    } finally {
+                        setBypassGamesLoading(false);
+                    }
+                };
+
+                fetchBypassGames();
+            }, []);
+
             // Theme system
             const themes = {
                 dark: { name: 'Dark', icon: '🌙', class: '' },
@@ -434,6 +538,7 @@
                     // Navigation
                     home: 'Home',
                     store: 'Store',
+                    gameBypasses: 'Game Bypasses',
                     downloads: 'Downloads',
                     favorites: 'Favorites',
                     backToStore: 'Back to Store',
@@ -489,6 +594,7 @@
                     metacritic: 'Metacritic:',
                     steamReviews: 'Steam Reviews:',
                     playingThrough: 'Playing Through:',
+                    filesForGame: 'Files for the game:',
                     howToRunInstructions: 'How to Run Instructions',
                     close: 'Close',
                     instructionsNotAvailable: 'Instructions not available for this game.',
@@ -537,12 +643,48 @@
                     themes: 'Themes',
 
                     // Language
-                    language: 'Language'
+                    language: 'Language',
+
+                    // Settings & Contact
+                    settings: 'Settings',
+                    contact: 'Contact',
+                    contactUs: 'Contact Us',
+                    theme: 'Theme',
+                    backgroundWallpaper: 'Background Wallpaper',
+                    showWallpaper: 'Show Background Wallpaper',
+                    hideWallpaper: 'Hide Background Wallpaper',
+                    backgroundMusic: 'Background Music',
+                    playBackgroundMusic: 'Play Background Music',
+                    stopBackgroundMusic: 'Stop Background Music',
+                    windowMode: 'Window Mode',
+                    fullscreen: 'Fullscreen',
+                    borderless: 'Borderless',
+                    windowed: 'Windowed',
+                    restartRequired: 'Restart required to apply changes',
+                    keyboardShortcuts: 'Keyboard Shortcuts:',
+                    navigatePages: 'Navigate pages',
+                    backClose: 'Back/Close',
+                    getInTouch: 'Get in touch with us for support, questions, or feedback.',
+                    email: 'Email',
+                    activeTheme: 'Active',
+                    autoSwitchesTheme: 'Auto-switches based on theme',
+                    startsAfterLoading: 'Starts after loading completes',
+
+                    // Player Count Filter
+                    playerCount: 'Player Count',
+                    anyPlayerCount: 'Any Player Count',
+                    twoPlayers: '2 Players',
+                    fourPlayers: '4 Players',
+                    sixPlusPlayers: '6+ Players',
+                    hasCoopCampaign: 'Has Co-Op Campaign',
+                    hasOnlineCoop: 'Has Online Co-Op',
+                    hasLocalCoop: 'Has Local Co-Op / Split Screen'
                 },
                 fr: {
                     // Navigation
                     home: 'Accueil',
                     store: 'Magasin',
+                    gameBypasses: 'Contournements de Jeux',
                     downloads: 'Téléchargements',
                     favorites: 'Favoris',
                     backToStore: 'Retour au Magasin',
@@ -598,6 +740,7 @@
                     metacritic: 'Metacritic:',
                     steamReviews: 'Avis Steam:',
                     playingThrough: 'Jouer Via:',
+                    filesForGame: 'Fichiers pour le jeu:',
                     howToRunInstructions: 'Instructions d\'Exécution',
                     close: 'Fermer',
                     instructionsNotAvailable: 'Instructions non disponibles pour ce jeu.',
@@ -646,7 +789,334 @@
                     themes: 'Thèmes',
 
                     // Language
-                    language: 'Langue'
+                    language: 'Langue',
+
+                    // Settings & Contact
+                    settings: 'Paramètres',
+                    contact: 'Contact',
+                    contactUs: 'Nous Contacter',
+                    theme: 'Thème',
+                    backgroundWallpaper: 'Fond d\'Écran',
+                    showWallpaper: 'Afficher le Fond d\'Écran',
+                    hideWallpaper: 'Masquer le Fond d\'Écran',
+                    backgroundMusic: 'Musique de Fond',
+                    playBackgroundMusic: 'Jouer la Musique de Fond',
+                    stopBackgroundMusic: 'Arrêter la Musique de Fond',
+                    windowMode: 'Mode Fenêtre',
+                    fullscreen: 'Plein Écran',
+                    borderless: 'Sans Bordure',
+                    windowed: 'Fenêtré',
+                    restartRequired: 'Redémarrage requis pour appliquer les modifications',
+                    keyboardShortcuts: 'Raccourcis Clavier:',
+                    navigatePages: 'Naviguer entre les pages',
+                    backClose: 'Retour/Fermer',
+                    getInTouch: 'Contactez-nous pour le support, les questions ou les commentaires.',
+                    email: 'Email',
+                    activeTheme: 'Actif',
+                    autoSwitchesTheme: 'Bascule automatiquement selon le thème',
+                    startsAfterLoading: 'Démarre après le chargement',
+
+                    // Player Count Filter
+                    playerCount: 'Nombre de Joueurs',
+                    anyPlayerCount: 'Tout Nombre de Joueurs',
+                    twoPlayers: '2 Joueurs',
+                    fourPlayers: '4 Joueurs',
+                    sixPlusPlayers: '6+ Joueurs',
+                    hasCoopCampaign: 'A une Campagne Co-Op',
+                    hasOnlineCoop: 'A du Co-Op en Ligne',
+                    hasLocalCoop: 'A du Co-Op Local / Écran Partagé'
+                },
+                es: {
+                    // Navigation
+                    home: 'Inicio',
+                    store: 'Tienda',
+                    gameBypasses: 'Bypasses de Juegos',
+                    downloads: 'Descargas',
+                    favorites: 'Favoritos',
+                    backToStore: 'Volver a la Tienda',
+                    statistics: 'Estadísticas',
+                    installationGuide: 'Guía de Instalación',
+
+                    // Actions
+                    search: 'Buscar juegos...',
+                    searchOnline: 'Buscar en online-fix.me',
+                    howToRun: 'Cómo Ejecutar',
+                    openSteam: 'Abrir en Steam',
+                    downloadFix: 'Descargar Fix',
+                    rateGame: 'Califica este juego:',
+                    clickToRemove: 'Haz clic en la misma estrella para eliminar',
+
+                    // Filters
+                    browseByTag: 'Navegar por Etiquetas',
+                    browseByGenre: 'Navegar por Géneros',
+                    loadingTags: 'Cargando etiquetas...',
+                    loadingGenres: 'Cargando géneros...',
+                    clearAll: 'Limpiar Todo',
+                    selected: 'seleccionado(s)',
+                    advancedFilters: 'Filtros Avanzados',
+                    hideFilters: 'Ocultar Filtros',
+                    activeFilters: 'Filtros Activos:',
+
+                    // View Mode
+                    viewMode: 'Modo de Vista:',
+                    gridView: 'Cuadrícula',
+                    listView: 'Lista',
+
+                    // Pagination
+                    first: 'Primero',
+                    previous: 'Anterior',
+                    next: 'Siguiente',
+                    last: 'Último',
+                    page: 'Página',
+                    pageOf: 'de',
+
+                    // Sorting
+                    sortGames: 'Ordenar Juegos',
+                    sortByNameAZ: 'A → Z',
+                    sortByNameZA: 'Z → A',
+                    sortByRatingHigh: 'Calificación (Alta)',
+                    sortByRatingLow: 'Calificación (Baja)',
+                    sortByRecentDownload: 'Descargas Recientes',
+                    sortByFavorites: 'Favoritos Primero',
+                    sortByIdAsc: 'ID (Bajo → Alto)',
+                    sortByIdDesc: 'ID (Alto → Bajo)',
+
+                    // Game info
+                    appId: 'ID de la App:',
+                    metacritic: 'Metacritic:',
+                    steamReviews: 'Reseñas de Steam:',
+                    playingThrough: 'Jugando a través de:',
+                    filesForGame: 'Archivos para el juego:',
+                    howToRunInstructions: 'Instrucciones de Ejecución',
+                    close: 'Cerrar',
+                    instructionsNotAvailable: 'Instrucciones no disponibles para este juego.',
+                    screenshots: 'Capturas de Pantalla',
+                    aboutGame: 'ACERCA DE ESTE JUEGO',
+                    coopFeatures: 'Características Co-Op',
+                    loadingCoop: 'Cargando información co-op...',
+                    coopNotAvailable: 'Información Co-Op no disponible para este juego.',
+                    tags: 'Etiquetas',
+                    genres: 'Géneros',
+                    developers: 'Desarrolladores',
+
+                    // Stats
+                    noGamesFound: 'No se encontraron juegos',
+                    showing: 'Mostrando',
+                    of: 'de',
+                    games: 'juegos',
+                    statisticsDashboard: 'Panel de Estadísticas',
+                    totalGames: 'Total de Juegos',
+                    totalDownloads: 'Total de Descargas',
+                    totalFavorites: 'Favoritos',
+                    averageRating: 'Calificación Promedio',
+
+                    // Installation Guide
+                    installationGuideTitle: 'Guía de Instalación',
+                    step1Title: '📥 Paso 1: Descargar el Fix',
+                    step1Desc: 'Haz clic en el botón "Descargar Fix" en cualquier página de juego.',
+                    step2Title: '📂 Paso 2: Extraer el Archivo',
+                    step2Desc: 'Haz clic derecho en el archivo .zip descargado y selecciona "Extraer todo".',
+                    step3Title: '🎮 Paso 3: Instalar el Juego',
+                    step3Desc: 'Asegúrate de tener el juego base instalado primero.',
+                    step4Title: '📋 Paso 4: Seguir el README',
+                    step4Desc: 'El archivo descomprimido tendrá una carpeta con el appID. Dentro de esa carpeta está todo lo que necesitas. Copia todo el contenido de esa carpeta y pégalo dentro de la carpeta de tu juego.',
+
+                    // Home page
+                    loadingStore: 'Cargando Online Fix Store',
+                    loadingMessage: 'Esto puede tardar unos minutos para todos los juegos...',
+
+                    // Notifications
+                    downloading: 'Descargando',
+                    downloaded: 'Descargado',
+                    downloadError: 'Error al descargar. Por favor, inténtalo de nuevo.',
+                    cached: 'En caché',
+
+                    // Themes
+                    themes: 'Temas',
+
+                    // Language
+                    language: 'Idioma',
+
+                    // Settings & Contact
+                    settings: 'Configuración',
+                    contact: 'Contacto',
+                    contactUs: 'Contáctanos',
+                    theme: 'Tema',
+                    backgroundWallpaper: 'Fondo de Pantalla',
+                    showWallpaper: 'Mostrar Fondo de Pantalla',
+                    hideWallpaper: 'Ocultar Fondo de Pantalla',
+                    backgroundMusic: 'Música de Fondo',
+                    playBackgroundMusic: 'Reproducir Música de Fondo',
+                    stopBackgroundMusic: 'Detener Música de Fondo',
+                    windowMode: 'Modo de Ventana',
+                    fullscreen: 'Pantalla Completa',
+                    borderless: 'Sin Bordes',
+                    windowed: 'Ventana',
+                    restartRequired: 'Requiere reinicio para aplicar cambios',
+                    keyboardShortcuts: 'Atajos de Teclado:',
+                    navigatePages: 'Navegar páginas',
+                    backClose: 'Atrás/Cerrar',
+                    getInTouch: 'Contáctanos para soporte, preguntas o comentarios.',
+                    email: 'Correo',
+                    activeTheme: 'Activo',
+                    autoSwitchesTheme: 'Cambia automáticamente según el tema',
+                    startsAfterLoading: 'Comienza después de cargar',
+
+                    // Player Count Filter
+                    playerCount: 'Cantidad de Jugadores',
+                    anyPlayerCount: 'Cualquier Cantidad',
+                    twoPlayers: '2 Jugadores',
+                    fourPlayers: '4 Jugadores',
+                    sixPlusPlayers: '6+ Jugadores',
+                    hasCoopCampaign: 'Tiene Campaña Co-Op',
+                    hasOnlineCoop: 'Tiene Co-Op en Línea',
+                    hasLocalCoop: 'Tiene Co-Op Local / Pantalla Dividida'
+                },
+                zh: {
+                    // Navigation
+                    home: '主页',
+                    store: '商店',
+                    gameBypasses: '游戏修复',
+                    downloads: '下载',
+                    favorites: '收藏',
+                    backToStore: '返回商店',
+                    statistics: '统计',
+                    installationGuide: '安装指南',
+
+                    // Actions
+                    search: '搜索游戏...',
+                    searchOnline: '在 online-fix.me 搜索',
+                    howToRun: '如何运行',
+                    openSteam: '在 Steam 中打开',
+                    downloadFix: '下载修复',
+                    rateGame: '为此游戏评分：',
+                    clickToRemove: '点击相同星星以移除',
+
+                    // Filters
+                    browseByTag: '按标签浏览',
+                    browseByGenre: '按类型浏览',
+                    loadingTags: '加载标签中...',
+                    loadingGenres: '加载类型中...',
+                    clearAll: '清除全部',
+                    selected: '已选择',
+                    advancedFilters: '高级筛选',
+                    hideFilters: '隐藏筛选',
+                    activeFilters: '活动筛选：',
+
+                    // View Mode
+                    viewMode: '查看模式：',
+                    gridView: '网格',
+                    listView: '列表',
+
+                    // Pagination
+                    first: '第一页',
+                    previous: '上一页',
+                    next: '下一页',
+                    last: '最后页',
+                    page: '页',
+                    pageOf: '共',
+
+                    // Sorting
+                    sortGames: '排序游戏',
+                    sortByNameAZ: 'A → Z',
+                    sortByNameZA: 'Z → A',
+                    sortByRatingHigh: '评分（高）',
+                    sortByRatingLow: '评分（低）',
+                    sortByRecentDownload: '最近下载',
+                    sortByFavorites: '收藏优先',
+                    sortByIdAsc: 'ID（低 → 高）',
+                    sortByIdDesc: 'ID（高 → 低）',
+
+                    // Game info
+                    appId: '应用 ID：',
+                    metacritic: 'Metacritic：',
+                    steamReviews: 'Steam 评价：',
+                    playingThrough: '游玩方式：',
+                    filesForGame: '游戏文件：',
+                    howToRunInstructions: '运行说明',
+                    close: '关闭',
+                    instructionsNotAvailable: '此游戏暂无说明。',
+                    screenshots: '截图',
+                    aboutGame: '关于此游戏',
+                    coopFeatures: '合作特性',
+                    loadingCoop: '加载合作信息中...',
+                    coopNotAvailable: '此游戏暂无合作信息。',
+                    tags: '标签',
+                    genres: '类型',
+                    developers: '开发者',
+
+                    // Stats
+                    noGamesFound: '未找到游戏',
+                    showing: '显示',
+                    of: '共',
+                    games: '款游戏',
+                    statisticsDashboard: '统计面板',
+                    totalGames: '游戏总数',
+                    totalDownloads: '下载总数',
+                    totalFavorites: '收藏',
+                    averageRating: '平均评分',
+
+                    // Installation Guide
+                    installationGuideTitle: '安装指南',
+                    step1Title: '📥 第一步：下载修复',
+                    step1Desc: '点击任何游戏页面上的"下载修复"按钮。',
+                    step2Title: '📂 第二步：解压文件',
+                    step2Desc: '右键点击下载的 .zip 文件并选择"全部解压"。',
+                    step3Title: '🎮 第三步：安装游戏',
+                    step3Desc: '确保您已先安装基础游戏。',
+                    step4Title: '📋 第四步：查看 README',
+                    step4Desc: '解压后的文件将包含一个带有 appID 的文件夹。该文件夹内包含您所需的全部内容。复制该文件夹的所有内容并粘贴到您的游戏文件夹中。',
+
+                    // Home page
+                    loadingStore: '加载 Online Fix Store',
+                    loadingMessage: '所有游戏可能需要几分钟...',
+
+                    // Notifications
+                    downloading: '下载中',
+                    downloaded: '已下载',
+                    downloadError: '下载失败。请重试。',
+                    cached: '已缓存',
+
+                    // Themes
+                    themes: '主题',
+
+                    // Language
+                    language: '语言',
+
+                    // Settings & Contact
+                    settings: '设置',
+                    contact: '联系',
+                    contactUs: '联系我们',
+                    theme: '主题',
+                    backgroundWallpaper: '背景壁纸',
+                    showWallpaper: '显示背景壁纸',
+                    hideWallpaper: '隐藏背景壁纸',
+                    backgroundMusic: '背景音乐',
+                    playBackgroundMusic: '播放背景音乐',
+                    stopBackgroundMusic: '停止背景音乐',
+                    windowMode: '窗口模式',
+                    fullscreen: '全屏',
+                    borderless: '无边框',
+                    windowed: '窗口',
+                    restartRequired: '需要重启以应用更改',
+                    keyboardShortcuts: '键盘快捷键：',
+                    navigatePages: '导航页面',
+                    backClose: '返回/关闭',
+                    getInTouch: '联系我们获取支持、提问或反馈。',
+                    email: '邮箱',
+                    activeTheme: '活动',
+                    autoSwitchesTheme: '根据主题自动切换',
+                    startsAfterLoading: '加载完成后开始',
+
+                    // Player Count Filter
+                    playerCount: '玩家数量',
+                    anyPlayerCount: '任意数量',
+                    twoPlayers: '2 名玩家',
+                    fourPlayers: '4 名玩家',
+                    sixPlusPlayers: '6+ 名玩家',
+                    hasCoopCampaign: '有合作战役',
+                    hasOnlineCoop: '有在线合作',
+                    hasLocalCoop: '有本地合作/分屏'
                 }
             };
 
@@ -980,9 +1450,10 @@
 
                 loadGames();
 
-                fetchFromVercel('Home.txt')
+                // Load README.md content for home page
+                window.electronAPI.readReadme()
                     .then(text => setHomeContent(text))
-                    .catch(() => setHomeContent('Welcome to Online Fix Store!\n\nYour one-stop destination for game fixes and updates.'));
+                    .catch(() => setHomeContent('# Welcome to OnlineFix Store\n\nYour one-stop destination for game fixes and updates.\n\n**All credits go to [online-fix.me](https://online-fix.me) and their team!**'));
             }, []);
 
             const fetchAllGameData = async (gameList) => {
@@ -1159,6 +1630,8 @@
                             recommendations: gameData.recommendations || null
                         };
                         steamCache[appID] = gameInfo;
+
+                        // Metacritic fallback now handled by Vercel API - no need for client-side fetch
 
                         // Cache the game data locally
                         setCachedGameData(appID, gameInfo);
@@ -1339,7 +1812,7 @@
                         console.log('Processed steamDataObj:', steamDataObj);
                         setSteamData(steamDataObj);
 
-                        // Cache the detailed Steam data
+                        // Cache the detailed Steam data (Metacritic fallback now handled by Vercel API)
                         setCachedSteamData(appID, steamDataObj);
 
                         setGames(prevGames =>
@@ -1347,7 +1820,7 @@
                                 game.appID === appID ? { ...game, name: gameData.name } : game
                             )
                         );
-                        
+
                         // Fetch Co-Op data and Online-Fix data after getting game name
                         if (gameData.name) {
                             console.log('Triggering co-op fetch for:', gameData.name);
@@ -1581,23 +2054,47 @@
                     const allText = gameDoc.body.textContent;
 
                     // Try multiple patterns - looking for "Игра через:" or "Играем через:"
-                    // Match only until the first period, newline, or "Страница"
+                    // Match until we hit Russian text or end markers
                     const playingPatterns = [
-                        /Игра через[:\s]+([^.\n]+?)(?:\.|\n|Страница|$)/i,
-                        /Играем через[:\s]+([^.\n]+?)(?:\.|\n|Страница|$)/i,
-                        /Playing through[:\s]+([^.\n]+?)(?:\.|\n|Page|$)/i
+                        /Игра через[:\s]+([^\n]+?)(?=\.|Страница|Скачать|Как запуск|$)/i,
+                        /Играем через[:\s]+([^\n]+?)(?=\.|Страница|Скачать|Как запуск|$)/i,
+                        /Playing through[:\s]+([^\n]+?)(?=\.|Page|Download|How to|$)/i
                     ];
 
                     for (const pattern of playingPatterns) {
                         const match = allText.match(pattern);
                         if (match) {
                             playingThrough = match[1].trim();
+                            console.log('📝 Raw extracted text:', playingThrough);
 
                             // Clean up - only keep platform names (Steam, Epic Games, Microsoft, etc.)
                             // Stop at any non-platform text
-                            const platformMatch = playingThrough.match(/^([^А-Яа-я]*(?:Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net)(?:\s*\+\s*(?:Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net))*)/i);
+                            // FIXED: Improved to capture ALL platforms including combinations
+                            // First, remove any leading/trailing whitespace and normalize spaces
+                            playingThrough = playingThrough.trim().replace(/\s+/g, ' ');
+                            console.log('📝 After whitespace normalization:', playingThrough);
+
+                            // Remove "аккаунт" (account) text that sometimes appears between platforms
+                            // Handle patterns like "Steam + аккаунт Epic Game Store"
+                            playingThrough = playingThrough.replace(/\s*\+\s*аккаунт\s+/gi, ' + ');
+                            playingThrough = playingThrough.replace(/аккаунт\s+/gi, '');
+                            console.log('📝 After removing аккаунт:', playingThrough);
+
+                            // Extract platform names - match one or more platforms with + separators
+                            // IMPORTANT: Added "Epic Game Store" (singular) variant as online-fix.me uses both
+                            // This regex captures: "Steam" or "Steam + Epic Games Store" or "Steam Remote Play + Microsoft Store"
+                            const platformMatch = playingThrough.match(/^((?:Steam Remote Play|Steam|Epic Games Store|Epic Game Store|Epic Games|Epic|Microsoft Store|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net)(?:\s*\+\s*(?:Steam Remote Play|Steam|Epic Games Store|Epic Game Store|Epic Games|Epic|Microsoft Store|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net))*)/i);
+
                             if (platformMatch) {
                                 playingThrough = platformMatch[1].trim();
+
+                                // Final cleanup: normalize spaces around + signs
+                                playingThrough = playingThrough.replace(/\s*\+\s*/g, ' + ');
+
+                                // Normalize "Epic Game Store" to "Epic Games Store" for consistency
+                                playingThrough = playingThrough.replace(/Epic Game Store/gi, 'Epic Games Store');
+                            } else {
+                                console.log('⚠️ Platform match failed for:', playingThrough);
                             }
 
                             console.log('✅ Found "Playing Through":', playingThrough);
@@ -1605,8 +2102,44 @@
                         }
                     }
 
+                    // Fallback: Try to find in HTML structure directly
                     if (!playingThrough) {
-                        console.log('❌ "Playing Through" not found');
+                        console.log('⚠️ Text-based extraction failed, trying HTML structure...');
+
+                        // Look for elements that might contain platform info
+                        const possibleSelectors = [
+                            '.game-info',
+                            '.game-details',
+                            '.full-text',
+                            '.story-content',
+                            '.entry-content',
+                            '[class*="info"]',
+                            '[class*="detail"]'
+                        ];
+
+                        for (const selector of possibleSelectors) {
+                            const elements = gameDoc.querySelectorAll(selector);
+                            for (const elem of elements) {
+                                const text = elem.textContent;
+                                const match = text.match(/(?:Игра через|Играем через)[:\s]+([^\n\.]+)/i);
+                                if (match) {
+                                    let extracted = match[1].trim();
+                                    // Apply same cleanup
+                                    extracted = extracted.replace(/\s+/g, ' ').replace(/\s*\+\s*аккаунт\s+/gi, ' + ').replace(/аккаунт\s+/gi, '');
+                                    const platformMatch = extracted.match(/^((?:Steam Remote Play|Steam|Epic Games Store|Epic Game Store|Epic Games|Epic|Microsoft Store|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net)(?:\s*\+\s*(?:Steam Remote Play|Steam|Epic Games Store|Epic Game Store|Epic Games|Epic|Microsoft Store|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net))*)/i);
+                                    if (platformMatch) {
+                                        playingThrough = platformMatch[1].trim().replace(/\s*\+\s*/g, ' + ').replace(/Epic Game Store/gi, 'Epic Games Store');
+                                        console.log('✅ Found via HTML structure:', playingThrough);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (playingThrough) break;
+                        }
+                    }
+
+                    if (!playingThrough) {
+                        console.log('❌ "Playing Through" not found in page');
                         console.log('Sample text from page:', allText.substring(0, 500));
                     }
 
@@ -1784,15 +2317,93 @@
                         console.log(`✅ Extracted ${instructions.length} instructions`);
                     }
 
+                    // Extract "Files for the game" (Файлы для игры)
+                    const filesForGame = [];
+                    const filesPatterns = [
+                        /Файлы для игры[:\s]*/i,
+                        /Files for the game[:\s]*/i
+                    ];
+
+                    console.log('🔍 Looking for "Files for the game" section...');
+
+                    for (const pattern of filesPatterns) {
+                        const match = allText.match(pattern);
+                        if (match) {
+                            console.log('✅ Found "Files for the game" header in text:', match[0]);
+
+                            // Get text after the header
+                            const afterHeader = allText.substring(allText.indexOf(match[0]) + match[0].length);
+
+                            // Find the end of the files section - stop at common section headers
+                            const sectionEnders = [
+                                'Как запускать',
+                                'Как запустить',
+                                'How to run',
+                                'Информация о сетевых режимах',
+                                'Примечания:',
+                                'Скачать',
+                                'Комментарии',
+                                'Похожие игры',
+                                'Обновления'
+                            ];
+
+                            // Find the earliest section ender
+                            let endIndex = afterHeader.length;
+                            for (const ender of sectionEnders) {
+                                const idx = afterHeader.indexOf(ender);
+                                if (idx !== -1 && idx < endIndex) {
+                                    endIndex = idx;
+                                }
+                            }
+
+                            // Only extract from the "Files for the game" section
+                            let filesText = afterHeader.substring(0, endIndex);
+                            console.log('Files text length:', filesText.length);
+
+                            // Clean up and normalize
+                            filesText = filesText.replace(/\s+/g, ' ').trim();
+                            filesText = filesText.replace(/(\d+[\.)]\s)/g, '\n$1');
+
+                            // Split by newlines
+                            const lines = filesText.split('\n').filter(l => l.trim().length > 0);
+                            console.log(`Found ${lines.length} lines in files section`);
+
+                            lines.forEach((line) => {
+                                line = line.trim();
+                                if (line.length > 5 && /^\d+[\.)]\s+.+/.test(line)) {
+                                    // Remove the number prefix and clean up
+                                    let cleanedLine = line.replace(/^\d+[\.)]\s+/, '').trim();
+
+                                    // Only keep reasonable length items
+                                    if (cleanedLine.length > 10 && cleanedLine.length < 1000 && !cleanedLine.includes('function') && !cleanedLine.includes('DLEalert')) {
+                                        filesForGame.push(cleanedLine);
+                                        console.log(`  ${filesForGame.length}. ${cleanedLine.substring(0, 60)}...`);
+                                    }
+                                }
+                            });
+
+                            if (filesForGame.length > 0) {
+                                console.log(`✅ Extracted ${filesForGame.length} file instructions`);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (filesForGame.length === 0) {
+                        console.log('❌ "Files for the game" section not found');
+                    }
+
                     const result = {
                         playingThrough: playingThrough || null,
                         instructions: instructions.length > 0 ? instructions : null,
+                        filesForGame: filesForGame.length > 0 ? filesForGame : null,
                         gamePageUrl: gamePageUrl
                     };
 
                     console.log('📊 Final result:', {
                         hasPlayingThrough: !!result.playingThrough,
                         instructionsCount: result.instructions?.length || 0,
+                        filesForGameCount: result.filesForGame?.length || 0,
                         url: result.gamePageUrl
                     });
 
@@ -1817,7 +2428,10 @@
                 console.log('🔤 Translating:', text.substring(0, 60) + '...', 'to', toLang);
 
                 // For simple platform names, no translation needed
-                if (/^(Steam|Epic Games Store|Epic Games|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net|\+|\s)+$/i.test(text)) {
+                // Normalize "Epic Game Store" to "Epic Games Store" first
+                text = text.replace(/Epic Game Store/gi, 'Epic Games Store');
+
+                if (/^(Steam Remote Play|Steam|Epic Games Store|Epic Game Store|Epic Games|Microsoft Store|Microsoft|Xbox|PlayStation|GOG|Origin|Uplay|Battle\.net|\+|\s)+$/i.test(text)) {
                     return text;
                 }
 
@@ -1825,95 +2439,205 @@
                 // IMPORTANT: Longer phrases MUST come first to avoid partial replacements causing double words
                 const translations = {
                     // Platforms (keep as-is)
-                    'Steam': { en: 'Steam', fr: 'Steam' },
-                    'Epic Games Store': { en: 'Epic Games Store', fr: 'Epic Games Store' },
-                    'Epic Games': { en: 'Epic Games', fr: 'Epic Games' },
-                    'Microsoft': { en: 'Microsoft', fr: 'Microsoft' },
+                    'Steam Remote Play': { en: 'Steam Remote Play', fr: 'Steam Remote Play', es: 'Steam Remote Play', zh: 'Steam Remote Play' },
+                    'Steam': { en: 'Steam', fr: 'Steam', es: 'Steam', zh: 'Steam' },
+                    'Epic Games Store': { en: 'Epic Games Store', fr: 'Epic Games Store', es: 'Epic Games Store', zh: 'Epic Games Store' },
+                    'Epic Games': { en: 'Epic Games', fr: 'Epic Games', es: 'Epic Games', zh: 'Epic Games' },
+                    'Microsoft Store': { en: 'Microsoft Store', fr: 'Microsoft Store', es: 'Microsoft Store', zh: 'Microsoft Store' },
+                    'Microsoft': { en: 'Microsoft Store', fr: 'Microsoft Store', es: 'Microsoft Store', zh: 'Microsoft Store' },
 
                     // Multi-word phrases (MUST come before individual words to prevent double translation)
-                    'приглашение от друга': { en: 'invitation from a friend', fr: 'invitation d\'un ami' },
-                    'Принимаем приглашение от друга': { en: 'Accept invitation from a friend', fr: 'Accepter l\'invitation d\'un ami' },
-                    'заходим в свой профиль': { en: 'go to your profile', fr: 'allons à votre profil' },
-                    'в свой профиль': { en: 'to your profile', fr: 'à votre profil' },
-                    'в любую папку': { en: 'to any folder', fr: 'dans n\'importe quel dossier' },
-                    'ожидаем их подключения': { en: 'wait for their connection', fr: 'attendons leur connexion' },
-                    'в открывшемся окне браузера': { en: 'in the opened browser window', fr: 'dans la fenêtre du navigateur ouverte' },
-                    'предоставляем доступ': { en: 'grant access', fr: 'accordons l\'accès' },
-                    'к любому серверу': { en: 'to any server', fr: 'à n\'importe quel serveur' },
-                    'в папке с игрой': { en: 'in the game folder', fr: 'dans le dossier du jeu' },
-                    'Подключаемся к': { en: 'Connect to', fr: 'Connectons-nous à' },
+                    // Very long phrases first
+                    'У вас нет прав': { en: 'You don\'t have permission', fr: 'Vous n\'avez pas la permission', es: 'No tienes permiso', zh: '您没有权限' },
+                    'нет прав': { en: 'no permission', fr: 'pas de permission', es: 'sin permiso', zh: '无权限' },
+                    'просмотра скрытого текста': { en: 'to view hidden text', fr: 'pour voir le texte caché', es: 'para ver texto oculto', zh: '查看隐藏文本' },
+                    'скрытого текста': { en: 'hidden text', fr: 'texte caché', es: 'texto oculto', zh: '隐藏文本' },
+                    'за бесплатно': { en: 'for free', fr: 'gratuitement', es: 'gratis', zh: '免费' },
+                    'Покупаем за бесплатно': { en: 'Purchase for free', fr: 'Achetez gratuitement', es: 'Comprar gratis', zh: '免费购买' },
+                    'Перед включением режима разработчика, ознакомьтесь с тем что это такое в интернете': { en: 'Before enabling developer mode, read about what it is on the internet', fr: 'Avant d\'activer le mode développeur, renseignez-vous sur ce que c\'est sur Internet', es: 'Antes de habilitar el modo desarrollador, infórmese sobre qué es en Internet', zh: '在启用开发者模式之前，请在互联网上了解它是什么' },
+                    'выполняем перезагрузку ПК, если это потребуется': { en: 'restart the PC if necessary', fr: 'redémarrez le PC si nécessaire', es: 'reiniciar la PC si es necesario', zh: '必要时重启电脑' },
+                    'Активация Epic Store Fix: (выполняется единожды)': { en: 'Epic Store Fix Activation: (done once)', fr: 'Activation du Fix Epic Store : (fait une fois)', es: 'Activación del Fix Epic Store: (se hace una vez)', zh: 'Epic Store修复激活：（仅一次）' },
+                    'Как минимум Windows 10 x64 версии не менее 1909 с установленными сервисами': { en: 'At minimum Windows 10 x64 version 1909 or higher with installed services', fr: 'Au minimum Windows 10 x64 version 1909 ou supérieure avec les services installés', es: 'Como mínimo Windows 10 x64 versión 1909 o superior con servicios instalados', zh: '至少 Windows 10 x64 版本 1909 或更高版本并安装服务' },
+                    'который находится в папке с игрой': { en: 'which is located in the game folder', fr: 'qui se trouve dans le dossier du jeu', es: 'que se encuentra en la carpeta del juego', zh: '位于游戏文件夹中' },
+                    'который расположен в папке с игрой': { en: 'which is located in the game folder', fr: 'qui se trouve dans le dossier du jeu', es: 'que se encuentra en la carpeta del juego', zh: '位于游戏文件夹中' },
+                    'Приглашаем друзей и ожидаем их подключения': { en: 'Invite friends and wait for their connection', fr: 'Invitez des amis et attendez leur connexion', es: 'Invitar amigos y esperar su conexión', zh: '邀请朋友并等待他们连接' },
+                    'Нажимаем нижнюю правую кнопку': { en: 'Press the bottom right button', fr: 'Appuyez sur le bouton en bas à droite', es: 'Presionar el botón inferior derecho', zh: '按右下角按钮' },
+                    'Создать пользовательскую игру': { en: 'Create custom game', fr: 'Créer un jeu personnalisé', es: 'Crear juego personalizado', zh: '创建自定义游戏' },
+                    'в свою библиотеку (не скачиваем её)': { en: 'to your library (don\'t download it)', fr: 'à votre bibliothèque (ne la téléchargez pas)', es: 'a tu biblioteca (no la descargues)', zh: '到你的库（不要下载）' },
+                    'не скачиваем её': { en: 'don\'t download it', fr: 'ne la téléchargez pas', es: 'no la descargues', zh: '不要下载' },
+
+                    // Files for the game section phrases
+                    'Free Trial & Friend\'s Pass': { en: 'Free Trial & Friend\'s Pass', fr: 'Essai Gratuit & Pass Ami', es: 'Prueba Gratuita y Pase de Amigo', zh: '免费试用和好友通行证' },
+                    'Friend\'s Pass': { en: 'Friend\'s Pass', fr: 'Pass Ami', es: 'Pase de Amigo', zh: '好友通行证' },
+                    'Free Trial': { en: 'Free Trial', fr: 'Essai Gratuit', es: 'Prueba Gratuita', zh: '免费试用' },
+                    'Fix Repair': { en: 'Fix Repair', fr: 'Fix Repair', es: 'Fix Repair', zh: 'Fix Repair' },
+                    'по ссылкам ниже из папки': { en: 'from the links below from the folder', fr: 'depuis les liens ci-dessous du dossier', es: 'desde los enlaces a continuación de la carpeta', zh: '从下面文件夹的链接' },
+                    'из папки Fix Repair': { en: 'from the Fix Repair folder', fr: 'depuis le dossier Fix Repair', es: 'desde la carpeta Fix Repair', zh: '从 Fix Repair 文件夹' },
+                    'ниже из папки': { en: 'below from the folder', fr: 'ci-dessous du dossier', es: 'a continuación de la carpeta', zh: '下面从文件夹' },
+                    'распаковываем его в папку с игрой': { en: 'extract it to the game folder', fr: 'extraire dans le dossier du jeu', es: 'extraerlo a la carpeta del juego', zh: '解压到游戏文件夹' },
+                    'в папку с игрой': { en: 'to the game folder', fr: 'dans le dossier du jeu', es: 'a la carpeta del juego', zh: '到游戏文件夹' },
+                    'приглашение от друга': { en: 'invitation from a friend', fr: 'invitation d\'un ami', es: 'invitación de un amigo', zh: '来自朋友的邀请' },
+                    'Принимаем приглашение от друга': { en: 'Accept invitation from a friend', fr: 'Accepter l\'invitation d\'un ami', es: 'Aceptar invitación de un amigo', zh: '接受来自朋友的邀请' },
+                    'заходим в свой профиль': { en: 'go to your profile', fr: 'allons à votre profil', es: 'ir a tu perfil', zh: '前往你的个人资料' },
+                    'в свой профиль': { en: 'to your profile', fr: 'à votre profil', es: 'a tu perfil', zh: '到你的个人资料' },
+                    'в любую папку': { en: 'to any folder', fr: 'dans n\'importe quel dossier', es: 'a cualquier carpeta', zh: '到任意文件夹' },
+                    'ожидаем их подключения': { en: 'wait for their connection', fr: 'attendons leur connexion', es: 'esperar su conexión', zh: '等待他们连接' },
+                    'в открывшемся окне браузера': { en: 'in the opened browser window', fr: 'dans la fenêtre du navigateur ouverte', es: 'en la ventana del navegador abierta', zh: '在打开的浏览器窗口中' },
+                    'предоставляем доступ': { en: 'grant access', fr: 'accordons l\'accès', es: 'otorgar acceso', zh: '授予访问权限' },
+                    'к любому серверу': { en: 'to any server', fr: 'à n\'importe quel serveur', es: 'a cualquier servidor', zh: '到任意服务器' },
+                    'в папке с игрой': { en: 'in the game folder', fr: 'dans le dossier du jeu', es: 'en la carpeta del juego', zh: '在游戏文件夹中' },
+                    'Подключаемся к': { en: 'Connect to', fr: 'Connectons-nous à', es: 'Conectar a', zh: '连接到' },
 
                     // Verbs
-                    'Запускаем': { en: 'Launch', fr: 'Lançons' },
-                    'Запустите': { en: 'Launch', fr: 'Lancez' },
-                    'Запустить': { en: 'Launch', fr: 'Lancer' },
-                    'Установите': { en: 'Install', fr: 'Installez' },
-                    'Войдите': { en: 'Log in to', fr: 'Connectez-vous à' },
-                    'Заходим': { en: 'Go', fr: 'Allons' },
-                    'заходим': { en: 'go', fr: 'allons' },
-                    'Принимаем': { en: 'Accept', fr: 'Acceptons' },
-                    'Создание': { en: 'Creating', fr: 'Création' },
-                    'Приглашаем': { en: 'Invite', fr: 'Invitons' },
-                    'ожидаем': { en: 'wait for', fr: 'attendons' },
-                    'Скачиваем': { en: 'Download', fr: 'Téléchargez' },
-                    'распаковываем': { en: 'extract', fr: 'extrayez' },
-                    'Подключаемся': { en: 'Connect', fr: 'Connectons-nous' },
-                    'предоставляем': { en: 'grant', fr: 'accordons' },
-                    'расположен': { en: 'located', fr: 'situé' },
-                    'открывшемся': { en: 'opened', fr: 'ouvert' },
-                    'Проходим': { en: 'Complete', fr: 'Complétons' },
-                    'Загружаем': { en: 'Load', fr: 'Chargeons' },
+                    'Запускаем': { en: 'Launch', fr: 'Lançons', es: 'Iniciar', zh: '启动' },
+                    'Запустите': { en: 'Launch', fr: 'Lancez', es: 'Iniciar', zh: '启动' },
+                    'Запустить': { en: 'Launch', fr: 'Lancer', es: 'Iniciar', zh: '启动' },
+                    'Установите': { en: 'Install', fr: 'Installez', es: 'Instalar', zh: '安装' },
+                    'Устанавливаем': { en: 'Install', fr: 'Installons', es: 'Instalar', zh: '安装' },
+                    'Войдите': { en: 'Log in to', fr: 'Connectez-vous à', es: 'Iniciar sesión en', zh: '登录到' },
+                    'Заходим': { en: 'Go to', fr: 'Allons à', es: 'Ir a', zh: '前往' },
+                    'заходим': { en: 'go to', fr: 'allons à', es: 'ir a', zh: '前往' },
+                    'Принимаем': { en: 'Accept', fr: 'Acceptons', es: 'Aceptar', zh: '接受' },
+                    'Создание': { en: 'Creating', fr: 'Création', es: 'Creando', zh: '创建中' },
+                    'Создать': { en: 'Create', fr: 'Créer', es: 'Crear', zh: '创建' },
+                    'Приглашаем': { en: 'Invite', fr: 'Invitons', es: 'Invitar', zh: '邀请' },
+                    'Пригласить': { en: 'Invite', fr: 'Inviter', es: 'Invitar', zh: '邀请' },
+                    'ожидаем': { en: 'wait for', fr: 'attendons', es: 'esperar', zh: '等待' },
+                    'Скачиваем': { en: 'Download', fr: 'Téléchargeons', es: 'Descargar', zh: '下载' },
+                    'Скачать': { en: 'Download', fr: 'Télécharger', es: 'Descargar', zh: '下载' },
+                    'Покупаем': { en: 'Purchase', fr: 'Achetons', es: 'Comprar', zh: '购买' },
+                    'распаковываем': { en: 'extract', fr: 'extrayons', es: 'extraer', zh: '解压' },
+                    'Подключаемся': { en: 'Connect', fr: 'Connectons-nous', es: 'Conectar', zh: '连接' },
+                    'Активируем': { en: 'Activate', fr: 'Activons', es: 'Activar', zh: '激活' },
+                    'Читаем': { en: 'Read', fr: 'Lisons', es: 'Leer', zh: '阅读' },
+                    'Включаем': { en: 'Enable', fr: 'Activons', es: 'Habilitar', zh: '启用' },
+                    'Выключаем': { en: 'Disable', fr: 'Désactivons', es: 'Deshabilitar', zh: '禁用' },
+                    'Нажимаем': { en: 'Press', fr: 'Appuyons', es: 'Presionar', zh: '按' },
+                    'Проходим': { en: 'Complete', fr: 'Complétons', es: 'Completar', zh: '完成' },
+                    'предоставляем': { en: 'grant', fr: 'accordons', es: 'otorgar', zh: '授予' },
+                    'расположен': { en: 'located', fr: 'situé', es: 'ubicado', zh: '位于' },
+                    'находится': { en: 'is located', fr: 'se trouve', es: 'está ubicado', zh: '位于' },
+                    'открывшемся': { en: 'opened', fr: 'ouvert', es: 'abierto', zh: '打开的' },
+                    'выполняется': { en: 'is done', fr: 'est fait', es: 'se realiza', zh: '完成' },
+                    'выполняем': { en: 'perform', fr: 'effectuons', es: 'realizar', zh: '执行' },
+                    'потребуется': { en: 'needed', fr: 'nécessaire', es: 'necesario', zh: '需要' },
+                    'Загружаем': { en: 'Load', fr: 'Chargeons', es: 'Cargar', zh: '加载' },
 
                     // Nouns
-                    'игру': { en: 'the game', fr: 'le jeu' },
-                    'игры': { en: 'game', fr: 'jeu' },
-                    'игрой': { en: 'game', fr: 'jeu' },
-                    'game': { en: 'game', fr: 'jeu' },
-                    'via': { en: 'via', fr: 'via' },
-                    'профиль': { en: 'profile', fr: 'profil' },
-                    'аккаунт': { en: 'account', fr: 'compte' },
-                    'приглашение': { en: 'invitation', fr: 'invitation' },
-                    'друга': { en: 'a friend', fr: 'un ami' },
-                    'друзей': { en: 'friends', fr: 'amis' },
-                    'другие': { en: 'other', fr: 'autres' },
-                    'сервера': { en: 'server', fr: 'serveur' },
-                    'серверу': { en: 'server', fr: 'serveur' },
-                    'подключения': { en: 'connection', fr: 'connexion' },
-                    'папку': { en: 'folder', fr: 'dossier' },
-                    'папке': { en: 'folder', fr: 'dossier' },
-                    'файлы': { en: 'files', fr: 'fichiers' },
-                    'браузера': { en: 'browser', fr: 'navigateur' },
-                    'окне': { en: 'window', fr: 'fenêtre' },
-                    'доступ': { en: 'access', fr: 'accès' },
-                    'который': { en: 'which', fr: 'qui' },
-                    'игроков': { en: 'players', fr: 'joueurs' },
-                    'обучение': { en: 'tutorial', fr: 'tutoriel' },
-                    'сохранение': { en: 'save', fr: 'sauvegarde' },
-                    'моё': { en: 'my', fr: 'mon' },
-                    'своё': { en: 'your', fr: 'votre' },
+                    'Внимание!': { en: 'Attention!', fr: 'Attention !', es: '¡Atención!', zh: '注意！' },
+                    'Внимание': { en: 'Attention', fr: 'Attention', es: 'Atención', zh: '注意' },
+                    'зарегистрируйтесь': { en: 'register', fr: 'inscrivez-vous', es: 'registrarse', zh: '注册' },
+                    'просмотра': { en: 'viewing', fr: 'visualisation', es: 'visualización', zh: '查看' },
+                    'скрытого': { en: 'hidden', fr: 'caché', es: 'oculto', zh: '隐藏的' },
+                    'текста': { en: 'text', fr: 'texte', es: 'texto', zh: '文本' },
+                    'права': { en: 'permission', fr: 'permission', es: 'permiso', zh: '权限' },
+                    'прав': { en: 'permission', fr: 'permission', es: 'permiso', zh: '权限' },
+                    'вас': { en: 'you', fr: 'vous', es: 'usted', zh: '您' },
+                    'нет': { en: 'no', fr: 'non', es: 'no', zh: '没有' },
+                    'бесплатно': { en: 'free', fr: 'gratuit', es: 'gratis', zh: '免费' },
+                    'игру': { en: 'the game', fr: 'le jeu', es: 'el juego', zh: '游戏' },
+                    'игры': { en: 'game', fr: 'jeu', es: 'juego', zh: '游戏' },
+                    'игрой': { en: 'game', fr: 'jeu', es: 'juego', zh: '游戏' },
+                    'game': { en: 'game', fr: 'jeu', es: 'juego', zh: '游戏' },
+                    'via': { en: 'via', fr: 'via', es: 'vía', zh: '通过' },
+                    'через': { en: 'through', fr: 'via', es: 'a través de', zh: '通过' },
+                    'за': { en: 'for', fr: 'pour', es: 'por', zh: '为了' },
+                    'профиль': { en: 'profile', fr: 'profil', es: 'perfil', zh: '个人资料' },
+                    'аккаунт': { en: 'account', fr: 'compte', es: 'cuenta', zh: '账户' },
+                    'приглашение': { en: 'invitation', fr: 'invitation', es: 'invitación', zh: '邀请' },
+                    'друга': { en: 'friend', fr: 'ami', es: 'amigo', zh: '朋友' },
+                    'друзей': { en: 'friends', fr: 'amis', es: 'amigos', zh: '朋友们' },
+                    'другие': { en: 'other', fr: 'autres', es: 'otros', zh: '其他' },
+                    'сервера': { en: 'server', fr: 'serveur', es: 'servidor', zh: '服务器' },
+                    'серверу': { en: 'server', fr: 'serveur', es: 'servidor', zh: '服务器' },
+                    'подключения': { en: 'connection', fr: 'connexion', es: 'conexión', zh: '连接' },
+                    'папку': { en: 'folder', fr: 'dossier', es: 'carpeta', zh: '文件夹' },
+                    'папке': { en: 'folder', fr: 'dossier', es: 'carpeta', zh: '文件夹' },
+                    'файлы': { en: 'files', fr: 'fichiers', es: 'archivos', zh: '文件' },
+                    'фикс': { en: 'fix', fr: 'fix', es: 'fix', zh: '修复' },
+                    'ссылкам': { en: 'links', fr: 'liens', es: 'enlaces', zh: '链接' },
+                    'ниже': { en: 'below', fr: 'ci-dessous', es: 'a continuación', zh: '下面' },
+                    'его': { en: 'it', fr: 'le', es: 'lo', zh: '它' },
+                    'её': { en: 'it', fr: 'la', es: 'la', zh: '它' },
+                    'их': { en: 'their', fr: 'leur', es: 'su', zh: '他们的' },
+                    'его': { en: 'his/its', fr: 'son', es: 'su', zh: '他的/它的' },
+                    'браузера': { en: 'browser', fr: 'navigateur', es: 'navegador', zh: '浏览器' },
+                    'окне': { en: 'window', fr: 'fenêtre', es: 'ventana', zh: '窗口' },
+                    'кнопку': { en: 'button', fr: 'bouton', es: 'botón', zh: '按钮' },
+                    'доступ': { en: 'access', fr: 'accès', es: 'acceso', zh: '访问' },
+                    'который': { en: 'which', fr: 'qui', es: 'que', zh: '哪个' },
+                    'игроков': { en: 'players', fr: 'joueurs', es: 'jugadores', zh: '玩家' },
+                    'обучение': { en: 'tutorial', fr: 'tutoriel', es: 'tutorial', zh: '教程' },
+                    'сохранение': { en: 'save', fr: 'sauvegarde', es: 'guardar', zh: '保存' },
+                    'требования': { en: 'requirements', fr: 'exigences', es: 'requisitos', zh: '要求' },
+                    'системе': { en: 'system', fr: 'système', es: 'sistema', zh: '系统' },
+                    'версии': { en: 'version', fr: 'version', es: 'versión', zh: '版本' },
+                    'сервисами': { en: 'services', fr: 'services', es: 'servicios', zh: '服务' },
+                    'режима': { en: 'mode', fr: 'mode', es: 'modo', zh: '模式' },
+                    'режим': { en: 'mode', fr: 'mode', es: 'modo', zh: '模式' },
+                    'разработчика': { en: 'developer', fr: 'développeur', es: 'desarrollador', zh: '开发者' },
+                    'перезагрузку': { en: 'restart', fr: 'redémarrage', es: 'reiniciar', zh: '重启' },
+                    'меню': { en: 'menu', fr: 'menu', es: 'menú', zh: '菜单' },
+                    'пуск': { en: 'start menu', fr: 'menu démarrer', es: 'menú inicio', zh: '开始菜单' },
+                    'нижнюю': { en: 'bottom', fr: 'bas', es: 'inferior', zh: '底部' },
+                    'правую': { en: 'right', fr: 'droite', es: 'derecha', zh: '右侧' },
+                    'пользовательскую': { en: 'custom', fr: 'personnalisé', es: 'personalizado', zh: '自定义' },
+                    'единожды': { en: 'once', fr: 'une fois', es: 'una vez', zh: '一次' },
+                    'библиотеку': { en: 'library', fr: 'bibliothèque', es: 'biblioteca', zh: '库' },
+                    'моё': { en: 'my', fr: 'mon', es: 'mi', zh: '我的' },
+                    'своё': { en: 'your', fr: 'votre', es: 'tu', zh: '你的' },
+                    'свой': { en: 'your', fr: 'votre', es: 'tu', zh: '你的' },
+                    'свою': { en: 'your', fr: 'votre', es: 'tu', zh: '你的' },
 
                     // Prepositions & conjunctions
-                    'через': { en: 'via', fr: 'via' },
-                    'от': { en: 'from', fr: 'de' },
-                    'и': { en: 'and', fr: 'et' },
-                    'или': { en: 'or', fr: 'ou' },
-                    'для': { en: 'for', fr: 'pour' },
-                    'на': { en: 'on', fr: 'sur' },
-                    'в': { en: 'in', fr: 'dans' },
-                    'к': { en: 'to', fr: 'à' },
-                    'с': { en: 'with', fr: 'avec' },
-                    'нему': { en: 'it', fr: 'lui' },
+                    'через': { en: 'via', fr: 'via', es: 'vía', zh: '通过' },
+                    'от': { en: 'from', fr: 'de', es: 'de', zh: '从' },
+                    'и': { en: 'and', fr: 'et', es: 'y', zh: '和' },
+                    'или': { en: 'or', fr: 'ou', es: 'o', zh: '或' },
+                    'для': { en: 'for', fr: 'pour', es: 'para', zh: '为了' },
+                    'на': { en: 'on', fr: 'sur', es: 'en', zh: '在' },
+                    'в': { en: 'in', fr: 'dans', es: 'en', zh: '在' },
+                    'к': { en: 'to', fr: 'à', es: 'a', zh: '到' },
+                    'с': { en: 'with', fr: 'avec', es: 'con', zh: '与' },
+                    'по': { en: 'via/by', fr: 'par', es: 'por', zh: '通过' },
+                    'из': { en: 'from', fr: 'de', es: 'de', zh: '从' },
+                    'не': { en: 'not', fr: 'ne pas', es: 'no', zh: '不' },
+                    'если': { en: 'if', fr: 'si', es: 'si', zh: '如果' },
+                    'это': { en: 'this', fr: 'ceci', es: 'esto', zh: '这个' },
+                    'что': { en: 'that/what', fr: 'que/quoi', es: 'que/qué', zh: '那/什么' },
+                    'менее': { en: 'less', fr: 'moins', es: 'menos', zh: '少于' },
+                    'более': { en: 'more', fr: 'plus', es: 'más', zh: '更多' },
+                    'минимум': { en: 'minimum', fr: 'minimum', es: 'mínimo', zh: '最小' },
+                    'нему': { en: 'it', fr: 'lui', es: 'ello', zh: '它' },
+                    'тем': { en: 'that', fr: 'cela', es: 'eso', zh: '那' },
+                    'такое': { en: 'such', fr: 'tel', es: 'tal', zh: '这样的' },
+                    'интернете': { en: 'internet', fr: 'internet', es: 'internet', zh: '互联网' },
 
                     // Common words
-                    'свой': { en: 'your', fr: 'votre' },
-                    'их': { en: 'their', fr: 'leur' },
-                    'любую': { en: 'any', fr: 'n\'importe quel' },
+                    'свой': { en: 'your', fr: 'votre', es: 'tu', zh: '你的' },
+                    'их': { en: 'their', fr: 'leur', es: 'su', zh: '他们的' },
+                    'любую': { en: 'any', fr: 'n\'importe quel', es: 'cualquier', zh: '任意' },
+                    'ознакомьтесь': { en: 'familiarize yourself', fr: 'familiarisez-vous', es: 'familiarícese', zh: '熟悉' },
+                    'установленными': { en: 'installed', fr: 'installés', es: 'instalados', zh: '已安装的' },
+
+                    // Section headers (important - must be before individual words)
+                    'Как запускать:': { en: 'How to run:', fr: 'Comment exécuter :', es: 'Cómo ejecutar:', zh: '如何运行：' },
+                    'Как запустить:': { en: 'How to launch:', fr: 'Comment lancer :', es: 'Cómo iniciar:', zh: '如何启动：' },
+                    'Требования к системе:': { en: 'System requirements:', fr: 'Configuration requise :', es: 'Requisitos del sistema:', zh: '系统要求：' },
+                    'Активация Epic Store Fix: (выполняется единожды)': { en: 'Epic Store Fix Activation: (done once)', fr: 'Activation du Fix Epic Store : (fait une fois)', es: 'Activación del Fix Epic Store: (se hace una vez)', zh: 'Epic Store修复激活：（仅一次）' },
+                    'Активация Epic Store Fix:': { en: 'Epic Store Fix Activation:', fr: 'Activation du Fix Epic Store :', es: 'Activación del Fix Epic Store:', zh: 'Epic Store修复激活：' },
+                    'Онлайн и Схватка': { en: 'Online and Skirmish', fr: 'En ligne et Escarmouche', es: 'En línea y Escaramuza', zh: '在线和遭遇战' },
 
                     // Game-specific
-                    'В игре': { en: 'In-game', fr: 'Dans le jeu' },
-                    'Подключение': { en: 'Connection', fr: 'Connexion' },
-                    'Мультиплеер': { en: 'Multiplayer', fr: 'Multijoueur' },
-                    'Создание сервера': { en: 'Creating server', fr: 'Création de serveur' }
+                    'В игре:': { en: 'In-game:', fr: 'Dans le jeu :', es: 'En el juego:', zh: '游戏中：' },
+                    'В игре': { en: 'In-game', fr: 'Dans le jeu', es: 'En el juego', zh: '游戏中' },
+                    'Подключение:': { en: 'Connection:', fr: 'Connexion :', es: 'Conexión:', zh: '连接：' },
+                    'Подключение': { en: 'Connection', fr: 'Connexion', es: 'Conexión', zh: '连接' },
+                    'Создание сервера:': { en: 'Creating server:', fr: 'Création de serveur :', es: 'Creando servidor:', zh: '创建服务器：' },
+                    'Создание сервера': { en: 'Creating server', fr: 'Création de serveur', es: 'Creando servidor', zh: '创建服务器' },
+                    'Проходим обучение': { en: 'Complete tutorial', fr: 'Complétez le tutoriel', es: 'Completar tutorial', zh: '完成教程' },
+                    'Мультиплеер': { en: 'Multiplayer', fr: 'Multijoueur', es: 'Multijugador', zh: '多人游戏' },
+                    'Схватка': { en: 'Skirmish', fr: 'Escarmouche', es: 'Escaramuza', zh: '遭遇战' }
                 };
 
                 let translated = text;
@@ -1923,7 +2647,12 @@
 
                 let replacements = 0;
                 for (const [rus, trans] of sortedEntries) {
-                    // For Cyrillic, word boundaries don't work well, so use lookahead/behind
+                    // Skip single-letter translations to avoid garbling
+                    if (rus.length === 1) {
+                        continue;
+                    }
+
+                    // Escape special regex characters
                     const escapedRus = rus.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     const regex = new RegExp(escapedRus, 'gi');
 
@@ -2084,6 +2813,13 @@
                 return tmp.textContent || tmp.innerText || '';
             };
 
+            // Debug: Show filter state
+            if (advancedFilters.playerCount) {
+                console.log('🔍 Player Count Filter Active:', advancedFilters.playerCount);
+                console.log('📊 Total games before filter:', games.length);
+                console.log('📋 Sample game coopData:', games[0]?.name, games[0]?.coopData?.maxPlayers);
+            }
+
             const filteredGames = games.filter(game => {
                 const matchesSearch = game.appID.includes(searchQuery) || game.name.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -2123,20 +2859,22 @@
                 
                 // Advanced filter: Player count
                 let matchesPlayerCount = true;
-                if (advancedFilters.playerCount && game.coopData) {
-                    const maxPlayers = game.coopData.maxPlayers || 0;
-                    const requestedPlayers = parseInt(advancedFilters.playerCount);
-                    
-                    if (requestedPlayers === 6) {
-                        // For 6+, show games with 6 or more players
-                        matchesPlayerCount = maxPlayers >= 6;
+                if (advancedFilters.playerCount) {
+                    if (game.coopData && game.coopData.maxPlayers) {
+                        const maxPlayers = parseInt(game.coopData.maxPlayers);
+                        const requestedPlayers = parseInt(advancedFilters.playerCount);
+
+                        if (requestedPlayers === 6) {
+                            // For 6+, show games with 6 or more players
+                            matchesPlayerCount = maxPlayers >= 6;
+                        } else {
+                            // For 2 and 4 players, show ONLY exact matches
+                            matchesPlayerCount = maxPlayers === requestedPlayers;
+                        }
                     } else {
-                        // For exact counts, show games that support AT LEAST that many
-                        matchesPlayerCount = maxPlayers >= requestedPlayers;
+                        // No co-op data or maxPlayers = doesn't match
+                        matchesPlayerCount = false;
                     }
-                } else if (advancedFilters.playerCount && !game.coopData) {
-                    // No co-op data = doesn't match
-                    matchesPlayerCount = false;
                 }
                 
                 // Advanced filter: Co-Op Campaign
@@ -2324,6 +3062,13 @@
                                         <Store /> {t('store')}
                                     </button>
 
+                                    <button onClick={() => { setCurrentView('bypasses'); setSelectedGame(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'bypasses' ? 'bg-purple-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        {t('gameBypasses')}
+                                    </button>
+
                                     <button onClick={() => { setCurrentView('store'); setSelectedGame(null); setSelectedTag('FAVORITES_FILTER'); setSelectedGenre(null); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${selectedTag === 'FAVORITES_FILTER' ? 'bg-pink-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
                                         <Heart filled={true} /> {t('favorites')} ({favorites.length})
                                     </button>
@@ -2337,18 +3082,18 @@
                                     </button>
 
                                     <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'settings' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
-                                        <Settings /> Settings
+                                        <Settings /> {t('settings')}
                                     </button>
 
                                     <button onClick={() => setCurrentView('contact')} className={`w-full flex items-center gap-3 px-4 py-3 rounded transition ${currentView === 'contact' ? 'bg-blue-600 text-white' : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
-                                        <Mail /> Contact
+                                        <Mail /> {t('contact')}
                                     </button>
                                 </nav>
 
                                 <div className={`mt-8 p-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg text-xs`}>
-                                    <p className="font-semibold mb-2">Keyboard Shortcuts:</p>
-                                    <p>← → Navigate pages</p>
-                                    <p>Esc Back/Close</p>
+                                    <p className="font-semibold mb-2">{t('keyboardShortcuts')}</p>
+                                    <p>← → {t('navigatePages')}</p>
+                                    <p>Esc {t('backClose')}</p>
                                 </div>
                             </div>
                         </div>
@@ -2364,11 +3109,75 @@
                         {currentView === 'home' && (
                             <div className="p-8 max-w-4xl mx-auto">
                                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
-                                    <h2 className="text-4xl font-bold mb-6">Welcome</h2>
-                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
-                                        {homeContent.split('\n').map((line, idx) => (
-                                            <p key={idx} className={line.trim() === '' ? 'h-4' : 'mb-2'}>{line}</p>
-                                        ))}
+                                    <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed markdown-content`}>
+                                        {homeContent.split('\n').map((line, idx) => {
+                                            // H1 headers (# )
+                                            if (line.startsWith('# ')) {
+                                                return <h1 key={idx} className="text-4xl font-bold mb-6 mt-8 first:mt-0">{line.substring(2)}</h1>;
+                                            }
+                                            // H2 headers (## )
+                                            if (line.startsWith('## ')) {
+                                                return <h2 key={idx} className="text-3xl font-bold mb-4 mt-6">{line.substring(3)}</h2>;
+                                            }
+                                            // H3 headers (### )
+                                            if (line.startsWith('### ')) {
+                                                return <h3 key={idx} className="text-2xl font-bold mb-3 mt-5">{line.substring(4)}</h3>;
+                                            }
+                                            // Unordered list items (- )
+                                            if (line.startsWith('- ')) {
+                                                const content = line.substring(2);
+                                                // Parse bold text (**text**)
+                                                const parts = content.split(/(\*\*.*?\*\*)/g);
+                                                return (
+                                                    <li key={idx} className="ml-6 mb-2 list-disc">
+                                                        {parts.map((part, i) => {
+                                                            if (part.startsWith('**') && part.endsWith('**')) {
+                                                                return <strong key={i}>{part.slice(2, -2)}</strong>;
+                                                            }
+                                                            return part;
+                                                        })}
+                                                    </li>
+                                                );
+                                            }
+                                            // Horizontal rule (---)
+                                            if (line.trim() === '---') {
+                                                return <hr key={idx} className="my-6 border-gray-600" />;
+                                            }
+                                            // Empty lines
+                                            if (line.trim() === '') {
+                                                return <div key={idx} className="h-4"></div>;
+                                            }
+                                            // Regular paragraphs with inline formatting
+                                            const parts = line.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+                                            return (
+                                                <p key={idx} className="mb-3">
+                                                    {parts.map((part, i) => {
+                                                        // Bold text (**text**)
+                                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                                            return <strong key={i}>{part.slice(2, -2)}</strong>;
+                                                        }
+                                                        // Links [text](url)
+                                                        const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
+                                                        if (linkMatch) {
+                                                            return (
+                                                                <a
+                                                                    key={i}
+                                                                    href={linkMatch[2]}
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        window.electronAPI.openExternal(linkMatch[2]);
+                                                                    }}
+                                                                    className="text-blue-400 hover:text-blue-300 underline cursor-pointer"
+                                                                >
+                                                                    {linkMatch[1]}
+                                                                </a>
+                                                            );
+                                                        }
+                                                        return part;
+                                                    })}
+                                                </p>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -2377,14 +3186,14 @@
                         {currentView === 'settings' && (
                             <div className="p-8 max-w-4xl mx-auto">
                                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
-                                    <h2 className="text-4xl font-bold mb-6">⚙️ Settings</h2>
+                                    <h2 className="text-4xl font-bold mb-6">⚙️ {t('settings')}</h2>
 
                                     <div className="space-y-6">
                                         {/* Themes Section */}
                                         <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
                                             <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
                                                 <Palette />
-                                                Theme
+                                                {t('theme')}
                                             </h3>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                 {Object.entries(themes).map(([key, theme]) => (
@@ -2399,7 +3208,7 @@
                                                     >
                                                         <span className="text-3xl">{theme.icon}</span>
                                                         <span className="text-sm font-semibold">{theme.name}</span>
-                                                        {currentTheme === key && <span className="text-xs">✓ Active</span>}
+                                                        {currentTheme === key && <span className="text-xs">✓ {t('activeTheme')}</span>}
                                                     </button>
                                                 ))}
                                             </div>
@@ -2407,14 +3216,14 @@
 
                                         {/* Background Wallpaper Toggle */}
                                         <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
-                                            <h3 className="text-2xl font-semibold mb-4">🖼️ Background Wallpaper</h3>
+                                            <h3 className="text-2xl font-semibold mb-4">🖼️ {t('backgroundWallpaper')}</h3>
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block`}>
-                                                        Show background wallpaper
+                                                        {t('showWallpaper')}
                                                     </span>
                                                     <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                        Auto-switches based on theme
+                                                        {t('autoSwitchesTheme')}
                                                     </span>
                                                 </div>
                                                 <button
@@ -2434,14 +3243,14 @@
 
                                         {/* Background Music Toggle */}
                                         <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
-                                            <h3 className="text-2xl font-semibold mb-4">🎵 Background Music</h3>
+                                            <h3 className="text-2xl font-semibold mb-4">🎵 {t('backgroundMusic')}</h3>
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block`}>
-                                                        Play background music
+                                                        {t('playBackgroundMusic')}
                                                     </span>
                                                     <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                        Starts after loading completes
+                                                        {t('startsAfterLoading')}
                                                     </span>
                                                 </div>
                                                 <button
@@ -2470,10 +3279,10 @@
                                         {/* Language Selection */}
                                         <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
                                             <h3 className="text-2xl font-semibold mb-4">🌐 Language</h3>
-                                            <div className="flex gap-3">
+                                            <div className="grid grid-cols-2 gap-3">
                                                 <button
                                                     onClick={() => setLanguage('en')}
-                                                    className={`flex-1 p-4 rounded-lg font-semibold transition ${
+                                                    className={`p-4 rounded-lg font-semibold transition ${
                                                         language === 'en'
                                                             ? 'bg-blue-600 text-white'
                                                             : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
@@ -2483,7 +3292,7 @@
                                                 </button>
                                                 <button
                                                     onClick={() => setLanguage('fr')}
-                                                    className={`flex-1 p-4 rounded-lg font-semibold transition ${
+                                                    className={`p-4 rounded-lg font-semibold transition ${
                                                         language === 'fr'
                                                             ? 'bg-blue-600 text-white'
                                                             : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
@@ -2491,13 +3300,33 @@
                                                 >
                                                     🇫🇷 Français
                                                 </button>
+                                                <button
+                                                    onClick={() => setLanguage('es')}
+                                                    className={`p-4 rounded-lg font-semibold transition ${
+                                                        language === 'es'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                    }`}
+                                                >
+                                                    🇪🇸 Español
+                                                </button>
+                                                <button
+                                                    onClick={() => setLanguage('zh')}
+                                                    className={`p-4 rounded-lg font-semibold transition ${
+                                                        language === 'zh'
+                                                            ? 'bg-blue-600 text-white'
+                                                            : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                                                    }`}
+                                                >
+                                                    🇨🇳 中文
+                                                </button>
                                             </div>
                                         </div>
 
                                         {/* Window Mode Selection (Electron only) */}
                                         {window.electronAPI && (
                                             <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}>
-                                                <h3 className="text-2xl font-semibold mb-4">🖥️ Window Mode</h3>
+                                                <h3 className="text-2xl font-semibold mb-4">🖥️ {t('windowMode')}</h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                     <button
                                                         onClick={() => setWindowMode('window')}
@@ -2508,7 +3337,7 @@
                                                         }`}
                                                     >
                                                         <div className="text-2xl mb-2">🪟</div>
-                                                        Window
+                                                        {t('windowed')}
                                                     </button>
                                                     <button
                                                         onClick={() => setWindowMode('fullscreen')}
@@ -2519,7 +3348,7 @@
                                                         }`}
                                                     >
                                                         <div className="text-2xl mb-2">⛶</div>
-                                                        Fullscreen
+                                                        {t('fullscreen')}
                                                     </button>
                                                     <button
                                                         onClick={() => setWindowMode('borderless')}
@@ -2530,7 +3359,7 @@
                                                         }`}
                                                     >
                                                         <div className="text-2xl mb-2">▭</div>
-                                                        Borderless
+                                                        {t('borderless')}
                                                     </button>
                                                 </div>
                                                 <div className="mt-4 flex items-center justify-between">
@@ -2559,14 +3388,14 @@
                         {currentView === 'contact' && (
                             <div className="p-8 max-w-4xl mx-auto">
                                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-lg p-8 shadow-xl`}>
-                                    <h2 className="text-4xl font-bold mb-6">Contact Us</h2>
+                                    <h2 className="text-4xl font-bold mb-6">{t('contactUs')}</h2>
                                     <div className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed space-y-4`}>
-                                        <p>Get in touch with us for support, questions, or feedback.</p>
+                                        <p>{t('getInTouch')}</p>
                                         <div className="space-y-4">
                                             <div className={`flex items-start gap-3 p-3 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded`}>
                                                 <Mail />
                                                 <div>
-                                                    <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Email</p>
+                                                    <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('email')}</p>
                                                     <a href="mailto:fixitf759@gmail.com" className="text-blue-400 hover:text-blue-300 break-all">fixitf759@gmail.com</a>
                                                 </div>
                                             </div>
@@ -2696,16 +3525,16 @@
 
                                                 {/* Player Count Filter */}
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2">🎮 Player Count</label>
-                                                    <select 
+                                                    <label className="block text-sm font-semibold mb-2">🎮 {t('playerCount')}</label>
+                                                    <select
                                                         value={advancedFilters.playerCount}
                                                         onChange={(e) => setAdvancedFilters({...advancedFilters, playerCount: e.target.value})}
                                                         className={`w-full px-3 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                                                     >
-                                                        <option value="">Any Player Count</option>
-                                                        <option value="2">2 Players</option>
-                                                        <option value="4">4 Players</option>
-                                                        <option value="6">6+ Players</option>
+                                                        <option value="">{t('anyPlayerCount')}</option>
+                                                        <option value="2">{t('twoPlayers')}</option>
+                                                        <option value="4">{t('fourPlayers')}</option>
+                                                        <option value="6">{t('sixPlusPlayers')}</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -2718,27 +3547,27 @@
                                                         onChange={(e) => setAdvancedFilters({...advancedFilters, hasCoopCampaign: e.target.checked})}
                                                         className="w-4 h-4"
                                                     />
-                                                    <span className="text-sm font-semibold">📖 Has Co-Op Campaign</span>
+                                                    <span className="text-sm font-semibold">📖 {t('hasCoopCampaign')}</span>
                                                 </label>
 
                                                 <label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition ${advancedFilters.onlineOnly ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'}`}>
-                                                    <input 
+                                                    <input
                                                         type="checkbox"
                                                         checked={advancedFilters.onlineOnly}
                                                         onChange={(e) => setAdvancedFilters({...advancedFilters, onlineOnly: e.target.checked})}
                                                         className="w-4 h-4"
                                                     />
-                                                    <span className="text-sm font-semibold">🌐 Has Online Co-Op</span>
+                                                    <span className="text-sm font-semibold">🌐 {t('hasOnlineCoop')}</span>
                                                 </label>
 
                                                 <label className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition ${advancedFilters.localOnly ? 'bg-purple-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'}`}>
-                                                    <input 
+                                                    <input
                                                         type="checkbox"
                                                         checked={advancedFilters.localOnly}
                                                         onChange={(e) => setAdvancedFilters({...advancedFilters, localOnly: e.target.checked})}
                                                         className="w-4 h-4"
                                                     />
-                                                    <span className="text-sm font-semibold">🎮 Has Local Co-Op / Split Screen</span>
+                                                    <span className="text-sm font-semibold">🎮 {t('hasLocalCoop')}</span>
                                                 </label>
                                             </div>
 
@@ -2761,7 +3590,7 @@
                                             {viewMode === 'grid' && (
                                                 <div className="grid grid-cols-6 gap-3 mb-8" style={{ gridAutoRows: 'auto' }}>
                                                     {currentGames.map(game => (
-                                                        <div key={game.id} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-lg relative`}>
+                                                        <div key={game.id} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition relative`} style={{ boxShadow: '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)', transition: 'all 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 15px 40px rgba(139, 92, 246, 0.6), 0 8px 20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'}>
                                                             <div onClick={() => handleGameClick(game)} className="aspect-square bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
                                                                 {game.headerImage ? (
                                                                     <img src={game.headerImage} alt={game.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
@@ -2819,7 +3648,7 @@
                                             {viewMode === 'list' && (
                                                 <div className="space-y-2 mb-8">
                                                     {currentGames.map(game => (
-                                                        <div key={game.id} onClick={() => handleGameClick(game)} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:bg-opacity-80 transition shadow-lg flex items-center p-3 gap-4`}>
+                                                        <div key={game.id} onClick={() => handleGameClick(game)} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:bg-opacity-80 transition flex items-center p-3 gap-4`} style={{ boxShadow: '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)', transition: 'all 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 15px 40px rgba(139, 92, 246, 0.6), 0 8px 20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'}>
                                                             <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden rounded flex-shrink-0">
                                                                 {game.headerImage ? (
                                                                     <img src={game.headerImage} alt={game.name} loading="lazy" className="w-full h-full object-cover" />
@@ -2868,7 +3697,7 @@
                                             {viewMode === 'card' && (
                                                 <div className="grid grid-cols-3 gap-6 mb-8">
                                                     {currentGames.map(game => (
-                                                        <div key={game.id} onClick={() => handleGameClick(game)} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition shadow-xl`}>
+                                                        <div key={game.id} onClick={() => handleGameClick(game)} className={`game-card ${darkMode ? 'bg-gray-800' : ''} rounded-lg overflow-hidden cursor-pointer hover:transform hover:scale-105 transition`} style={{ boxShadow: '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)', transition: 'all 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 15px 40px rgba(139, 92, 246, 0.6), 0 8px 20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)'}>
                                                             <div className="h-48 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center relative overflow-hidden">
                                                                 {game.headerImage ? (
                                                                     <img src={game.headerImage} alt={game.name} loading="lazy" className="w-full h-full object-cover" />
@@ -2995,6 +3824,21 @@
                                                     )}
                                                 </div>
                                             )}
+
+                                            {/* Player Count Filter - RIGHT SIDEBAR */}
+                                            <div className="mb-6">
+                                                <label className={`text-xl font-bold mb-4 block`}>🎮 {t('playerCount')}</label>
+                                                <select
+                                                    value={advancedFilters.playerCount}
+                                                    onChange={(e) => setAdvancedFilters({...advancedFilters, playerCount: e.target.value})}
+                                                    className={`w-full px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                                >
+                                                    <option value="">{t('anyPlayerCount')}</option>
+                                                    <option value="2">{t('twoPlayers')}</option>
+                                                    <option value="4">{t('fourPlayers')}</option>
+                                                    <option value="6">{t('sixPlusPlayers')}</option>
+                                                </select>
+                                            </div>
 
                                             <details className="mb-6">
                                                 <summary className={`text-xl font-bold mb-4 cursor-pointer ${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'} transition pr-6`}>🏷️ Browse by Tags (Multi-select)</summary>
@@ -3128,12 +3972,252 @@
                                                     </select>
                                                 </div>
                                             </details>
+
+                                            {/* Useful Apps & Plugins Section */}
+                                            <details className="mb-6">
+                                                <summary className={`text-xl font-bold mb-4 cursor-pointer ${darkMode ? 'hover:text-purple-400' : 'hover:text-purple-600'} transition pr-6`}>🛠️ Useful Apps & Plugins</summary>
+                                                <div className="space-y-3">
+                                                    {usefulApps.map(app => (
+                                                        <div
+                                                            key={app.id}
+                                                            onClick={() => setSelectedPlugin(app)}
+                                                            className={`p-3 rounded-lg cursor-pointer transition ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} border ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <div className="font-semibold text-sm">{app.name}</div>
+                                                                    <div className="text-xs text-gray-400">{app.type === 'plugin' ? '🔌 Plugin' : '💻 App'}</div>
+                                                                </div>
+                                                                <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </details>
                                         </div>
                                     )}
                                     
                                     {!rightSidebarOpen && (
                                         <button onClick={() => setRightSidebarOpen(true)} className={`fixed top-4 right-4 z-50 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} p-2 rounded transition`}><ChevronLeft /></button>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Game Bypasses View */}
+                        {currentView === 'bypasses' && !selectedBypassGame && (
+                            <div className="p-6">
+                                <h1 className="text-4xl font-bold mb-6 flex items-center gap-3">
+                                    <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    {t('gameBypasses')}
+                                    <span className="text-sm font-normal text-gray-400">
+                                        ({bypassGamesLoading ? '...' : bypassGames.length})
+                                    </span>
+                                </h1>
+
+                                {/* Search Bar */}
+                                <div className="mb-6">
+                                    <input
+                                        type="text"
+                                        placeholder={t('search')}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className={`w-full px-4 py-3 rounded-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                                    />
+                                </div>
+
+                                {/* Loading State */}
+                                {bypassGamesLoading && (
+                                    <div className="flex flex-col items-center justify-center py-12">
+                                        <Loader />
+                                        <p className="mt-4 text-gray-400">Loading bypasses from GitHub...</p>
+                                    </div>
+                                )}
+
+                                {/* Bypasses List */}
+                                {!bypassGamesLoading && (
+                                    <div className="space-y-2">
+                                        {bypassGames
+                                            .filter(game => game.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                                            .map(game => (
+                                                <div
+                                                    key={game.id}
+                                                    onClick={() => setSelectedBypassGame(game)}
+                                                    className={`p-4 rounded-lg cursor-pointer transition ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                                    style={{ boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)' }}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-lg font-semibold">{game.name}</span>
+                                                        <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        {bypassGames.filter(game => game.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                                            <div className="text-center py-12 text-gray-400">
+                                                No bypasses found matching "{searchQuery}"
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Bypass Game Detail View */}
+                        {currentView === 'bypasses' && selectedBypassGame && (
+                            <div className="p-6">
+                                <div className={`sticky top-0 ${darkMode ? 'bg-gray-900' : 'bg-white'} z-10 pb-4 mb-4`}>
+                                    <button onClick={() => setSelectedBypassGame(null)} className={`px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} rounded transition`}>
+                                        ← Back to Bypasses
+                                    </button>
+                                </div>
+
+                                <div className="text-center py-12">
+                                    <svg className="w-24 h-24 text-purple-500 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <h1 className="text-5xl font-bold mb-8">{selectedBypassGame.name}</h1>
+
+                                    <button
+                                        onClick={() => {
+                                            const url = `https://github.com/ShayneVi/Bypasses/releases/download/v1.0/${selectedBypassGame.filename}`;
+                                            window.electronAPI.downloadBypass(url, selectedBypassGame.filename);
+                                        }}
+                                        className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xl transition shadow-xl"
+                                    >
+                                        <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        Download Bypass
+                                    </button>
+
+                                    <p className="mt-6 text-gray-500 text-sm">
+                                        The bypass will be downloaded from GitHub releases
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Plugin/App Detail Modal */}
+                        {selectedPlugin && (
+                            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPlugin(null)}>
+                                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg max-w-2xl w-full p-8 relative`} onClick={(e) => e.stopPropagation()}>
+                                    {/* Close Button */}
+                                    <button onClick={() => setSelectedPlugin(null)} className={`absolute top-4 right-4 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'} transition`}>
+                                        <X />
+                                    </button>
+
+                                    {/* Icon */}
+                                    <div className="text-center mb-6">
+                                        <div className="inline-block p-4 bg-purple-600 rounded-full mb-4">
+                                            {selectedPlugin.type === 'plugin' ? (
+                                                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <h2 className="text-3xl font-bold mb-2">{selectedPlugin.name}</h2>
+                                        <div className="text-sm text-gray-400 mb-4">{selectedPlugin.type === 'plugin' ? '🔌 Steam Plugin' : '💻 Desktop Application'}</div>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-4 mb-6`}>
+                                        <p className="text-sm leading-relaxed">{selectedPlugin.description}</p>
+                                    </div>
+
+                                    {/* Install Path Info */}
+                                    {selectedPlugin.installPath && (
+                                        <div className={`${darkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg p-4 mb-6 border ${darkMode ? 'border-gray-600' : 'border-blue-200'}`}>
+                                            <div className="flex items-start gap-2">
+                                                <svg className="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <div>
+                                                    <div className="font-semibold text-sm text-blue-500 mb-1">Auto-Install Location</div>
+                                                    <div className="text-xs font-mono">{selectedPlugin.installPath}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    // Fetch latest release
+                                                    const response = await fetch(`https://api.github.com/repos/${selectedPlugin.repo}/releases/latest`);
+                                                    const data = await response.json();
+
+                                                    if (data.assets && data.assets.length > 0) {
+                                                        const asset = data.assets[0]; // Get first asset (usually the .zip)
+                                                        const downloadUrl = asset.browser_download_url;
+
+                                                        if (selectedPlugin.type === 'plugin' && selectedPlugin.installPath) {
+                                                            // Auto-extract to Steam plugins folder
+                                                            const result = await window.electronAPI.downloadAndExtractFix(
+                                                                downloadUrl,
+                                                                selectedPlugin.installPath,
+                                                                '', // No appID needed
+                                                                asset.name
+                                                            );
+
+                                                            if (result.success) {
+                                                                alert(`✅ ${selectedPlugin.name} installed successfully to ${selectedPlugin.installPath}`);
+                                                            } else {
+                                                                alert(`❌ Installation failed: ${result.error}`);
+                                                            }
+                                                        } else {
+                                                            // Let user choose download location
+                                                            const result = await window.electronAPI.downloadBypass(downloadUrl, asset.name);
+                                                            if (result.success) {
+                                                                alert(`✅ ${selectedPlugin.name} downloaded successfully!`);
+                                                            } else {
+                                                                alert(`❌ Download failed: ${result.error}`);
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error downloading plugin:', error);
+                                                    alert('❌ Failed to download. Check console for details.');
+                                                }
+                                            }}
+                                            className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition shadow-lg flex items-center justify-center gap-2"
+                                        >
+                                            <Download />
+                                            {selectedPlugin.type === 'plugin' ? 'Install Plugin' : 'Download App'}
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                window.electronAPI.openExternal(`https://github.com/${selectedPlugin.repo}`);
+                                            }}
+                                            className={`px-6 py-3 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} font-semibold rounded-lg transition flex items-center gap-2`}
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                            </svg>
+                                            GitHub
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                window.electronAPI.openExternal(`https://github.com/${selectedPlugin.repo}/releases/latest`);
+                                            }}
+                                            className={`px-6 py-3 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} font-semibold rounded-lg transition`}
+                                        >
+                                            Releases
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -3191,6 +4275,20 @@
                                                             <span className="px-3 py-1 rounded bg-purple-600 text-white font-bold">
                                                                 {translateRussianText(onlineFixData.playingThrough, language)}
                                                             </span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Files for the game Section */}
+                                                    {onlineFixData && onlineFixData.filesForGame && onlineFixData.filesForGame.length > 0 && (
+                                                        <div className="mt-4 p-4 bg-gray-700 rounded-lg">
+                                                            <h4 className="text-base font-bold text-orange-400 mb-3">{t('filesForGame')}</h4>
+                                                            <ol className="list-decimal list-inside space-y-2">
+                                                                {onlineFixData.filesForGame.map((item, index) => (
+                                                                    <li key={index} className="text-sm text-gray-300 leading-relaxed">
+                                                                        {translateRussianText(item, language)}
+                                                                    </li>
+                                                                ))}
+                                                            </ol>
                                                         </div>
                                                     )}
                                                 </div>
@@ -3460,16 +4558,25 @@
                                     <div className="p-6">
                                         {onlineFixData && onlineFixData.instructions && onlineFixData.instructions.length > 0 ? (
                                             <ol className="space-y-4">
-                                                {onlineFixData.instructions.map((instruction, idx) => (
-                                                    <li key={idx} className={`flex gap-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                                                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
-                                                            {idx + 1}
-                                                        </span>
-                                                        <div className="flex-1 pt-1">
-                                                            <p className="leading-relaxed">{translateRussianText(instruction, language)}</p>
-                                                        </div>
-                                                    </li>
-                                                ))}
+                                                {onlineFixData.instructions.map((instruction, idx) => {
+                                                    // Check if this is a section header (В игре:, Подключение:, Создание сервера:)
+                                                    const isSectionHeader = /^(В игре|Подключение|Создание сервера|In-game|Connection|Creating server)[:]/i.test(instruction);
+
+                                                    return (
+                                                        <li key={idx} className={`flex gap-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'} ${isSectionHeader ? 'mt-4' : ''}`}>
+                                                            {!isSectionHeader && (
+                                                                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
+                                                                    {idx + 1}
+                                                                </span>
+                                                            )}
+                                                            <div className={`flex-1 pt-1 ${isSectionHeader ? 'w-full' : ''}`}>
+                                                                <p className={`leading-relaxed ${isSectionHeader ? 'font-bold text-orange-400 text-lg' : ''}`}>
+                                                                    {translateRussianText(instruction, language)}
+                                                                </p>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
                                             </ol>
                                         ) : (
                                             <div className={`p-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg text-center`}>

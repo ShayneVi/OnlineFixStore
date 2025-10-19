@@ -5044,30 +5044,6 @@
       "popularity": 9078,
       "source": "https://www.co-optimus.com/game/11742/pc/superfuse.html"
     },
-    "Ancient Dungeon": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": false,
-      "onlineCoopPlayers": null,
-      "comboCoop": false,
-      "lanPlay": true,
-      "coopCampaign": false,
-      "maxPlayers": 0,
-      "popularity": 1402,
-      "source": "https://www.co-optimus.com/game/270/psp/dungeon-explorer-warrior-of-ancient-arts.html"
-    },
-    "Battle Talent": {
-      "localCoop": false,
-      "localCoopPlayers": null,
-      "onlineCoop": true,
-      "onlineCoopPlayers": "3 Players",
-      "comboCoop": false,
-      "lanPlay": false,
-      "coopCampaign": false,
-      "maxPlayers": 3,
-      "popularity": 1464,
-      "source": "https://www.co-optimus.com/game/3721/Android/the-witcher-battle-arena.html"
-    },
     "Brave Escape": {
       "localCoop": true,
       "localCoopPlayers": "2 Players",

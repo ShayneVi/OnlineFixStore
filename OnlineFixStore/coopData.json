@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-10-23T18:34:39.886816Z",
-  "totalGames": 92,
+  "lastUpdated": "2025-10-24T13:36:31.373136Z",
+  "totalGames": 94,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -1107,6 +1107,30 @@
       "maxPlayers": 3,
       "popularity": 48,
       "source": "https://www.co-optimus.com/game/3461/pc/dead-island-2.html"
+    },
+    "GODBREAKERS": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "4 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": false,
+      "maxPlayers": 4,
+      "popularity": 1426,
+      "source": "https://www.co-optimus.com/game/17325/xbox-series/godbreakers.html"
+    },
+    "PowerWash Simulator 2": {
+      "localCoop": true,
+      "localCoopPlayers": "2 Players",
+      "onlineCoop": true,
+      "onlineCoopPlayers": "6 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": true,
+      "maxPlayers": 6,
+      "popularity": 26,
+      "source": "https://www.co-optimus.com/game/16580/pc/powerwash-simulator-2.html"
     }
   }
 }

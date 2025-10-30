@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-10-30T14:40:43.497918Z",
-  "totalGames": 200,
+  "lastUpdated": "2025-10-30T18:54:13.303906Z",
+  "totalGames": 201,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -2403,6 +2403,18 @@
       "maxPlayers": 6,
       "popularity": 5076,
       "source": "https://www.co-optimus.com/game/5248/pc/warhammer-40-000-gladius-ndash-relics-of-war.html"
+    },
+    "Palworld": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "32 Players",
+      "comboCoop": false,
+      "lanPlay": true,
+      "coopCampaign": true,
+      "maxPlayers": 32,
+      "popularity": 350,
+      "source": "https://www.co-optimus.com/game/9814/pc/palworld.html"
     }
   }
 }

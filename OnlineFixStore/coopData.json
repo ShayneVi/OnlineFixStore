@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-10-30T18:54:13.303906Z",
-  "totalGames": 201,
+  "lastUpdated": "2025-10-30T19:29:43.495218Z",
+  "totalGames": 202,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -2415,6 +2415,18 @@
       "maxPlayers": 32,
       "popularity": 350,
       "source": "https://www.co-optimus.com/game/9814/pc/palworld.html"
+    },
+    "Forza Horizon 5": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "6 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": false,
+      "maxPlayers": 6,
+      "popularity": 1755,
+      "source": "https://www.co-optimus.com/game/9964/xbox-one/forza-horizon-5.html"
     }
   }
 }

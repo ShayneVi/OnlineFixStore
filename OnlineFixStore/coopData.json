@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-11-02T02:32:16.397516Z",
-  "totalGames": 241,
+  "lastUpdated": "2025-11-02T17:27:28.847800Z",
+  "totalGames": 242,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -2895,6 +2895,18 @@
       "maxPlayers": 2,
       "popularity": 502,
       "source": "https://www.co-optimus.com/game/5721/pc/spongebob-squarepants-battle-for-bikini-bottom-rehydrated.html"
+    },
+    "Wreckreation": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "8 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": false,
+      "maxPlayers": 8,
+      "popularity": 4112,
+      "source": "https://www.co-optimus.com/game/17314/pc/wreckreation.html"
     }
   }
 }

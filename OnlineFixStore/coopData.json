@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-11-03T04:41:06.756309Z",
-  "totalGames": 349,
+  "lastUpdated": "2025-11-12T18:59:17.176516Z",
+  "totalGames": 350,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -4191,6 +4191,18 @@
       "maxPlayers": 4,
       "popularity": 935,
       "source": "https://www.co-optimus.com/game/1584/pc/magicka.html"
+    },
+    "Towa and the Guardians of the Sacred Tree": {
+      "localCoop": true,
+      "localCoopPlayers": "2 Players",
+      "onlineCoop": true,
+      "onlineCoopPlayers": "2 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": true,
+      "maxPlayers": 2,
+      "popularity": 1334,
+      "source": "https://www.co-optimus.com/game/17007/pc/towa-and-the-guardians-of-the-sacred-tree.html"
     }
   }
 }

@@ -1,8 +1,8 @@
 {
   "comment": "Co-op database - automatically scraped",
   "instructions": "Accurate player counts from Co-Optimus",
-  "lastUpdated": "2025-11-12T18:59:17.176516Z",
-  "totalGames": 350,
+  "lastUpdated": "2025-11-17T18:11:11.117095Z",
+  "totalGames": 352,
   "games": {
     "9 Monkeys of Shaolin": {
       "localCoop": true,
@@ -4203,6 +4203,30 @@
       "maxPlayers": 2,
       "popularity": 1334,
       "source": "https://www.co-optimus.com/game/17007/pc/towa-and-the-guardians-of-the-sacred-tree.html"
+    },
+    "Salt 2: Shores of Gold": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "6 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": false,
+      "maxPlayers": 6,
+      "popularity": 605,
+      "source": "https://www.co-optimus.com/game/17699/pc/salt-2-shores-of-gold.html"
+    },
+    "Skopje '83": {
+      "localCoop": false,
+      "localCoopPlayers": null,
+      "onlineCoop": true,
+      "onlineCoopPlayers": "4 Players",
+      "comboCoop": false,
+      "lanPlay": false,
+      "coopCampaign": false,
+      "maxPlayers": 4,
+      "popularity": 4817,
+      "source": "https://www.co-optimus.com/game/15517/pc/skopje-83.html"
     }
   }
 }
